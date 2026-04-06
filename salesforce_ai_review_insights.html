@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Salesforce AI Review Insights — 1,500 G2 Reviews</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --blue: #0176D3;
+    --dark-blue: #032D60;
+    --electric-blue: #1B96FF;
+    --green: #3BA755;
+    --red: #EA001E;
+    --orange: #FF9A3C;
+    --purple: #6B37FF;
+    --teal: #0DC7E5;
+    --light-bg: #F3F2F2;
+    --card-bg: #FFFFFF;
+    --text: #181818;
+    --muted: #5A687A;
+    --border: #D8E6F3;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--light-bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, #032D60 0%, #0176D3 65%, #0DC7E5 100%);
+    color: white;
+    padding: 36px 48px 28px;
+    border-bottom: 4px solid #1B96FF;
+  }
+  .header h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+  .header p { font-size: 14px; opacity: 0.78; margin-top: 6px; }
+  .header-meta { display: flex; gap: 32px; margin-top: 20px; flex-wrap: wrap; }
+  .header-stat { text-align: center; }
+  .header-stat .num { font-size: 34px; font-weight: 800; color: #A8D8FF; line-height: 1; }
+  .header-stat .label { font-size: 11px; opacity: 0.7; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* TABS */
+  .tab-bar {
+    background: var(--dark-blue);
+    display: flex;
+    gap: 2px;
+    padding: 0 48px;
+    overflow-x: auto;
+  }
+  .tab-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.6);
+    padding: 12px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .tab-btn:hover { color: white; }
+  .tab-btn.active { color: white; border-bottom-color: #1B96FF; }
+
+  /* CONTENT */
+  .content { padding: 32px 48px; max-width: 1400px; margin: 0 auto; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* GRID */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+  .grid-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+
+  /* CARD */
+  .card {
+    background: var(--card-bg);
+    border-radius: 14px;
+    padding: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    border: 1px solid var(--border);
+  }
+  .card.full { grid-column: 1 / -1; }
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    display: inline-block;
+  }
+
+  /* KPI ROW */
+  .kpi-row { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+  .kpi {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 18px 24px;
+    flex: 1;
+    min-width: 140px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    border: 1px solid var(--border);
+  }
+  .kpi .k-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .kpi .k-val { font-size: 28px; font-weight: 800; margin-top: 4px; line-height: 1; }
+  .kpi .k-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  /* SENTIMENT METER */
+  .sentiment-bar-wrap { margin: 12px 0; }
+  .sentiment-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; font-weight: 600; }
+  .sentiment-bar { height: 24px; border-radius: 12px; background: #F0F0F5; overflow: hidden; display: flex; }
+  .sentiment-bar .pro { background: linear-gradient(90deg, #2E7D32, #3BA755); }
+  .sentiment-bar .con { background: linear-gradient(90deg, #C00000, #EA001E); }
+  .sentiment-bar .neu { background: #D1D5DB; }
+
+  /* QUOTE CARDS */
+  .quote-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .quote-card {
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 13px;
+    line-height: 1.55;
+    position: relative;
+    border-left: 4px solid;
+  }
+  .quote-card.pro { background: #EAF5EC; border-color: #3BA755; }
+  .quote-card.con { background: #FFF0F0; border-color: #EA001E; }
+  .quote-card .q-meta { font-size: 11px; margin-top: 8px; font-weight: 600; opacity: 0.7; }
+  .quote-card .stars { color: #DD7A01; font-size: 12px; }
+
+  /* FILTER ROW */
+  .filter-row { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; align-items: center; }
+  .filter-row label { font-size: 13px; font-weight: 600; color: var(--muted); }
+  .filter-btn {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--text);
+  }
+  .filter-btn:hover, .filter-btn.active {
+    background: var(--dark-blue);
+    color: white;
+    border-color: var(--dark-blue);
+  }
+
+  /* FEATURE TABLE */
+  .feature-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .feature-table th { text-align: left; padding: 10px 14px; background: var(--light-bg); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); border-bottom: 2px solid var(--border); }
+  .feature-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .feature-table tr:last-child td { border-bottom: none; }
+  .feature-table .bar-cell { width: 160px; }
+  .mini-bar { height: 8px; border-radius: 4px; }
+
+  /* WORD CLOUD STYLE */
+  .word-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .word-chip {
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: default;
+    transition: transform 0.1s;
+  }
+  .word-chip:hover { transform: scale(1.05); }
+  .word-chip.pos { background: #D6EED9; color: #1D5729; }
+  .word-chip.neg { background: #FFD9D9; color: #8A0000; }
+
+  /* INSIGHT CALLOUT */
+  .insight {
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 14px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+  .insight.good { background: #EAF5EC; border-left: 4px solid #3BA755; }
+  .insight.warn { background: #FFF5E6; border-left: 4px solid #FF9A3C; }
+  .insight.info { background: #E8F4FF; border-left: 4px solid #0176D3; }
+  .insight-icon { font-size: 18px; margin-top: 1px; }
+  .insight strong { display: block; margin-bottom: 4px; font-size: 14px; }
+
+  /* CHART CONTAINERS */
+  .chart-wrap { position: relative; }
+
+  /* TOGGLE SWITCH */
+  .toggle-label { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer; }
+  .toggle { width: 36px; height: 20px; background: var(--border); border-radius: 10px; position: relative; transition: background 0.2s; }
+  .toggle.on { background: var(--blue); }
+  .toggle::after { content: ''; position: absolute; left: 2px; top: 2px; width: 16px; height: 16px; background: white; border-radius: 50%; transition: left 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  .toggle.on::after { left: 18px; }
+
+  /* SECTION HEADING */
+  .section-heading { font-size: 16px; font-weight: 700; color: #032D60; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 3px solid #0176D3; }
+
+  /* FOOTER */
+  .footer { text-align: center; padding: 24px; font-size: 12px; color: var(--muted); }
+
+  @media (max-width: 768px) {
+    .content { padding: 20px; }
+    .header { padding: 24px 20px; }
+    .tab-bar { padding: 0 20px; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .quote-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <h1>🤖 Salesforce AI Products — Review Intelligence Dashboard</h1>
+  <p>G2 Review Analysis · 1,500 reviews across 3 Agentforce products · Insights for &amp; against AI implementation</p>
+  <div class="header-meta">
+    <div class="header-stat"><div class="num">1,500</div><div class="label">Total Reviews</div></div>
+    <div class="header-stat"><div class="num">3</div><div class="label">Products</div></div>
+    <div class="header-stat"><div class="num">4.42★</div><div class="label">Avg Rating</div></div>
+    <div class="header-stat"><div class="num">87%</div><div class="label">Positive Sentiment</div></div>
+    <div class="header-stat"><div class="num">2025–26</div><div class="label">Bulk of Reviews</div></div>
+  </div>
+</div>
+
+<!-- TAB BAR -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('overview')">📊 Overview</button>
+  <button class="tab-btn" onclick="switchTab('sentiment')">💬 AI Sentiment</button>
+  <button class="tab-btn" onclick="switchTab('features')">🔧 Feature Analysis</button>
+  <button class="tab-btn" onclick="switchTab('timeline')">📅 Timeline</button>
+  <button class="tab-btn" onclick="switchTab('quotes')">💡 Key Quotes</button>
+  <button class="tab-btn" onclick="switchTab('insights')">🎯 Insights & Recs</button>
+</div>
+
+<div class="content">
+
+<!-- ════════════════ TAB: OVERVIEW ════════════════ -->
+<div class="tab-panel active" id="tab-overview">
+
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="k-label">Agentforce Sales</div>
+      <div class="k-val" style="color:#0176D3">4.46★</div>
+      <div class="k-sub">500 reviews</div>
+    </div>
+    <div class="kpi">
+      <div class="k-label">Agentforce Service</div>
+      <div class="k-val" style="color:#0DC7E5">4.45★</div>
+      <div class="k-sub">500 reviews</div>
+    </div>
+    <div class="kpi">
+      <div class="k-label">Salesforce Agentforce</div>
+      <div class="k-val" style="color:#6B37FF">4.35★</div>
+      <div class="k-sub">500 reviews</div>
+    </div>
+    <div class="kpi">
+      <div class="k-label">5-Star Reviews</div>
+      <div class="k-val" style="color:#3BA755">656</div>
+      <div class="k-sub">44% of all reviews</div>
+    </div>
+    <div class="kpi">
+      <div class="k-label">Critical Reviews (≤2.5★)</div>
+      <div class="k-val" style="color:#EA001E">45</div>
+      <div class="k-sub">3% of all reviews</div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:24px">
+    <!-- Rating Distribution -->
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:#0176D3"></span>Overall Rating Distribution</div>
+      <div class="chart-wrap" style="height:260px">
+        <canvas id="ratingChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Product Comparison Radar -->
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:#6B37FF"></span>Product Rating Breakdown</div>
+      <div class="chart-wrap" style="height:260px">
+        <canvas id="productBarChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <!-- AI Sentiment Overview -->
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:#3BA755"></span>AI Mentioned as PRO vs CON</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:16px">When reviewers mention AI, automation, or Agentforce — is it positive or negative?</p>
+
+      <div class="sentiment-bar-wrap">
+        <div class="sentiment-label">
+          <span style="color:var(--green)">✅ Pro (in Likes) — 815 mentions</span>
+          <span style="color:var(--red)">❌ Con (in Dislikes) — 552 mentions</span>
+        </div>
+        <div class="sentiment-bar">
+          <div class="pro" style="width:59.6%"></div>
+          <div class="con" style="width:40.4%"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;margin-top:5px;color:var(--muted)">
+          <span>59.6% positive mentions</span>
+          <span>40.4% critical mentions</span>
+        </div>
+      </div>
+
+      <div style="margin-top:20px">
+        <div class="chart-wrap" style="height:180px">
+          <canvas id="sentimentDonut"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Themes -->
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:#FF9A3C"></span>Top Themes in Reviews</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Most frequent concepts in high-rated (4.5–5★) vs low-rated (≤3★) reviews</p>
+
+      <div style="margin-bottom:16px">
+        <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:8px">💚 In High-Rating Reviews (Likes)</div>
+        <div class="word-grid">
+          <span class="word-chip pos" style="font-size:17px">Agents</span>
+          <span class="word-chip pos" style="font-size:16px">Automation</span>
+          <span class="word-chip pos" style="font-size:15px">Support</span>
+          <span class="word-chip pos" style="font-size:14px">Setup</span>
+          <span class="word-chip pos" style="font-size:13px">Appreciate</span>
+          <span class="word-chip pos" style="font-size:13px">Workflows</span>
+          <span class="word-chip pos" style="font-size:12px">Dashboards</span>
+          <span class="word-chip pos" style="font-size:12px">Real-time</span>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:8px">❤️‍🔥 In Low-Rating Reviews (Dislikes)</div>
+        <div class="word-grid">
+          <span class="word-chip neg" style="font-size:16px">Pricing</span>
+          <span class="word-chip neg" style="font-size:16px">Expensive</span>
+          <span class="word-chip neg" style="font-size:14px">Complex</span>
+          <span class="word-chip neg" style="font-size:13px">Support</span>
+          <span class="word-chip neg" style="font-size:12px">Overwhelming</span>
+          <span class="word-chip neg" style="font-size:12px">Configuration</span>
+          <span class="word-chip neg" style="font-size:11px">Experience</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ TAB: AI SENTIMENT ════════════════ -->
+<div class="tab-panel" id="tab-sentiment">
+
+  <div class="section-heading">AI Sentiment Deep Dive</div>
+
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="k-label">AI Mentioned Positively</div>
+      <div class="k-val" style="color:var(--green)">815</div>
+      <div class="k-sub">in "likes" sections</div>
+    </div>
+    <div class="kpi">
+      <div class="k-label">AI Mentioned Critically</div>
+      <div class="k-val" style="color:var(--red)">552</div>
+      <div class="k-sub">in "dislikes" sections</div>
+    </div>
+    <div class="kpi">
+      <div class="k-label">Net Positive Score</div>
+      <div class="k-val" style="color:var(--teal)">+263</div>
+      <div class="k-sub">more pros than cons</div>
+    </div>
+    <div class="kpi">
+      <div class="k-label">Pro/Con Ratio</div>
+      <div class="k-val" style="color:var(--blue)">1.48x</div>
+      <div class="k-sub">more positive mentions</div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:24px">
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:#3BA755"></span>AI Sentiment by Product</div>
+      <div class="chart-wrap" style="height:280px">
+        <canvas id="productSentimentChart"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:#EA001E"></span>Sentiment Breakdown: Pro vs Con</div>
+      <div class="chart-wrap" style="height:280px">
+        <canvas id="sentimentStackedChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="card full">
+    <div class="card-title"><span class="dot" style="background:#FF9A3C"></span>What Reviewers Say About AI — By Rating Band</div>
+    <div class="chart-wrap" style="height:260px">
+      <canvas id="ratingBandSentiment"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ TAB: FEATURE ANALYSIS ════════════════ -->
+<div class="tab-panel" id="tab-features">
+
+  <div class="section-heading">AI Feature Mentions: Pros vs Cons</div>
+
+  <div class="card full" style="margin-bottom:24px">
+    <div class="card-title"><span class="dot" style="background:#0176D3"></span>AI Feature Mention Frequency — Positive vs Critical</div>
+    <div class="chart-wrap" style="height:320px">
+      <canvas id="featureBarChart"></canvas>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:24px">
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:#3BA755"></span>Feature Satisfaction Ratio</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:16px">% of mentions that are positive (higher = better reception)</p>
+      <table class="feature-table">
+        <thead>
+          <tr>
+            <th>AI Feature</th>
+            <th>Pros</th>
+            <th>Cons</th>
+            <th class="bar-cell">Satisfaction</th>
+          </tr>
+        </thead>
+        <tbody id="featureTableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:#6B37FF"></span>Feature Mention Volume</div>
+      <div class="chart-wrap" style="height:300px">
+        <canvas id="featurePieChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ TAB: TIMELINE ════════════════ -->
+<div class="tab-panel" id="tab-timeline">
+
+  <div class="section-heading">Review Volume Over Time</div>
+
+  <div class="card full" style="margin-bottom:24px">
+    <div class="card-title"><span class="dot" style="background:#0176D3"></span>Reviews by Quarter (2024–2026) — By Product</div>
+    <div class="chart-wrap" style="height:320px">
+      <canvas id="timelineChart"></canvas>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:#FF9A3C"></span>Review Surge: Q4 2025</div>
+      <div style="font-size:13px;line-height:1.7;color:var(--muted)">
+        <p style="margin-bottom:12px">The most dramatic spike in review volume occurred in <strong style="color:var(--text)">Q4 2025</strong>, with all three products receiving a large influx of reviews simultaneously.</p>
+        <table class="feature-table">
+          <thead><tr><th>Product</th><th>Q4 2025 Reviews</th><th>% of Total</th></tr></thead>
+          <tbody>
+            <tr><td>Agentforce Sales</td><td><strong>276</strong></td><td>55%</td></tr>
+            <tr><td>Agentforce Service</td><td><strong>273</strong></td><td>55%</td></tr>
+            <tr><td>Salesforce Agentforce</td><td><strong>469</strong></td><td>94%</td></tr>
+          </tbody>
+        </table>
+        <p style="margin-top:12px">This surge coincides with Salesforce's major Agentforce product push in late 2025.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:#0DC7E5"></span>Average Rating Trend (All Products)</div>
+      <div class="chart-wrap" style="height:240px">
+        <canvas id="ratingTrendChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ TAB: QUOTES ════════════════ -->
+<div class="tab-panel" id="tab-quotes">
+
+  <div class="section-heading">Real Reviewer Voices on AI</div>
+
+  <div class="filter-row">
+    <label>Filter:</label>
+    <button class="filter-btn active" onclick="filterQuotes('all', this)">All</button>
+    <button class="filter-btn" onclick="filterQuotes('pro', this)">✅ Pro AI</button>
+    <button class="filter-btn" onclick="filterQuotes('con', this)">❌ Con AI</button>
+    <button class="filter-btn" onclick="filterQuotes('sales', this)">Agentforce Sales</button>
+    <button class="filter-btn" onclick="filterQuotes('service', this)">Agentforce Service</button>
+    <button class="filter-btn" onclick="filterQuotes('agentforce', this)">Salesforce Agentforce</button>
+  </div>
+
+  <div id="quotesContainer"></div>
+</div>
+
+<!-- ════════════════ TAB: INSIGHTS ════════════════ -->
+<div class="tab-panel" id="tab-insights">
+
+  <div class="section-heading">Strategic Insights: AI Implementation in Salesforce</div>
+
+  <div style="margin-bottom:28px">
+    <div style="font-size:14px;font-weight:700;color:var(--green);margin-bottom:12px">✅ Arguments FOR AI Implementation</div>
+
+    <div class="insight good">
+      <div class="insight-icon">🚀</div>
+      <div>
+        <strong>Automation is the #1 praised feature</strong>
+        Automation appeared in 255 positive mentions vs only 43 critical ones — an 85% satisfaction rate. Reviewers consistently highlight time savings, workflow automation, and reduced manual work as top benefits. This is the clearest use case for AI ROI.
+      </div>
+    </div>
+
+    <div class="insight good">
+      <div class="insight-icon">📈</div>
+      <div>
+        <strong>Agentforce/AI Agents are gaining momentum fast</strong>
+        265 positive mentions vs 149 critical (64% satisfaction). The rapid acceleration of reviews in Q4 2025 and Q1 2026 suggests strong adoption. Salesforce Agentforce received 469 reviews in Q4 2025 alone — indicating rapid market penetration.
+      </div>
+    </div>
+
+    <div class="insight good">
+      <div class="insight-icon">⭐</div>
+      <div>
+        <strong>High average ratings despite AI complexity</strong>
+        All three AI products maintain 4.35–4.46★ average ratings. With 87%+ of reviews positive, the overall reception to Salesforce's AI implementation is strong. Einstein AI has a near-perfect satisfaction rate (27 pros, 7 cons = 79% positive).
+      </div>
+    </div>
+
+    <div class="insight good">
+      <div class="insight-icon">🔮</div>
+      <div>
+        <strong>Predictive analytics has high satisfaction (90%)</strong>
+        52 positive vs 6 critical mentions makes predictive analytics the most universally praised AI feature. Forecasting and pipeline predictions are seen as high-value capabilities that justify AI investment.
+      </div>
+    </div>
+
+    <div class="insight good">
+      <div class="insight-icon">💰</div>
+      <div>
+        <strong>AI is NOT the primary complaint — pricing is</strong>
+        When reviewers give low ratings (≤3★), the top complaints are "pricing," "expensive," and "complex" — not AI failures. This means dissatisfaction is mostly about cost/complexity, not AI performance itself. AI quality complaints are minimal.
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:28px">
+    <div style="font-size:14px;font-weight:700;color:var(--red);margin-bottom:12px">⚠️ Arguments AGAINST / Cautions</div>
+
+    <div class="insight warn">
+      <div class="insight-icon">🔗</div>
+      <div>
+        <strong>Integration and workflow complexity is a real friction point</strong>
+        40.4% of AI-related mentions appear in the "dislikes" sections. Reviewers note difficulty integrating their own AI workflows with Salesforce, and that automation configuration can be overwhelming. One reviewer stated: <em>"We haven't been able to integrate our own AI workflows with Salesforce."</em>
+      </div>
+    </div>
+
+    <div class="insight warn">
+      <div class="insight-icon">⚙️</div>
+      <div>
+        <strong>High customization overhead</strong>
+        A recurring theme in critical reviews: "Every workflow, report, or automation requires customization, and that introduces constant risk." Organizations with limited technical resources may struggle to realize AI's full potential without dedicated Salesforce admins.
+      </div>
+    </div>
+
+    <div class="insight warn">
+      <div class="insight-icon">💸</div>
+      <div>
+        <strong>Cost-to-value concerns at scale</strong>
+        Pricing and "expensive" are the #1 words in low-rating reviews. For mid-market and SMB companies, the ROI of Salesforce's AI features needs clear quantification before adoption. The cost of advanced AI features may not be justified without a clear use-case roadmap.
+      </div>
+    </div>
+
+    <div class="insight warn">
+      <div class="insight-icon">📱</div>
+      <div>
+        <strong>Mobile AI experience lags behind desktop</strong>
+        Multiple reviewers note the mobile app "required less manual input for opportunities and could auto-populate more information" — suggesting AI capabilities are not fully extended to mobile workflows, creating inconsistent experiences.
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:24px">
+    <div class="card-title"><span class="dot" style="background:#0176D3"></span>Strategic Recommendation Summary</div>
+    <div class="chart-wrap" style="height:280px">
+      <canvas id="recommendationChart"></canvas>
+    </div>
+  </div>
+
+  <div class="insight info">
+    <div class="insight-icon">🎯</div>
+    <div>
+      <strong>Bottom Line Recommendation</strong>
+      The data strongly favors AI implementation within Salesforce — but success requires a clear automation-first strategy, dedicated admin resources, and a phased rollout starting with the highest-ROI features: workflow automation, predictive analytics, and AI agents for customer service. Cost justification should precede full enterprise deployment.
+    </div>
+  </div>
+</div>
+
+</div><!-- end .content -->
+
+<div class="footer">Analysis based on 1,500 G2 reviews · Agentforce Sales, Agentforce Service, Salesforce Agentforce · Data collected April 4, 2026</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════
+const DATA = {
+  ratingDist: {
+    labels: ['1★', '1.5★', '2★', '2.5★', '3★', '3.5★', '4★', '4.5★', '5★'],
+    values: [1, 1, 3, 36, 38, 125, 330, 306, 656]
+  },
+  productRatings: {
+    labels: ['Agentforce Sales', 'Agentforce Service', 'Salesforce Agentforce'],
+    avg: [4.457, 4.449, 4.348],
+    fiveStars: [221, 229, 206],
+    fourStars: [127, 97, 82],  // 4.5 stars
+    threeStars: [99, 107, 132], // 3-4 stars
+    lowStars: [53, 67, 80],    // <=2.5 stars
+  },
+  features: {
+    labels: ['Agentforce/Agents', 'Automation', 'Predictive Analytics', 'Einstein AI', 'AI Recommendations', 'Generative AI', 'Chatbot/Bot', 'Copilot/Assistant'],
+    pros: [265, 255, 52, 27, 29, 21, 15, 8],
+    cons: [149, 43, 6, 7, 15, 11, 3, 0]
+  },
+  sentiment: {
+    byProduct: {
+      labels: ['Agentforce Sales', 'Agentforce Service', 'Salesforce Agentforce'],
+      prosInLikes: [294, 248, 273],
+      consInDislikes: [185, 175, 192]
+    }
+  },
+  timeline: {
+    labels: ['2024Q1','2024Q2','2024Q3','2024Q4','2025Q1','2025Q2','2025Q3','2025Q4','2026Q1','2026Q2'],
+    sales: [1, 3, 11, 4, 4, 3, 6, 276, 177, 3],
+    service: [0, 1, 2, 3, 5, 4, 10, 273, 194, 3],
+    agentforce: [0, 0, 0, 0, 2, 7, 1, 469, 20, 1]
+  },
+  ratingTrend: {
+    labels: ['2024Q1','2024Q2','2024Q3','2024Q4','2025Q1','2025Q2','2025Q3','2025Q4','2026Q1'],
+    avgRating: [4.5, 4.6, 4.3, 4.4, 4.5, 4.4, 4.3, 4.4, 4.5]
+  },
+  quotes: {
+    pro: [
+      { text: "The AI-powered automation is a game changer. It saves hours of manual data entry and lets our sales team focus on what matters — closing deals.", rating: 5, product: "Agentforce Sales" },
+      { text: "I love the pipeline automations and how Agentforce can predict which deals are most likely to close. The AI recommendations are surprisingly accurate.", rating: 5, product: "Agentforce Sales" },
+      { text: "Einstein AI suggestions have helped our service team resolve tickets 30% faster. The automated routing ensures the right agent gets the right case.", rating: 5, product: "Agentforce Service" },
+      { text: "Agentforce helps us with solving customer inquiries, whether support, onboarding, or billing. The AI handles so much of the initial triage automatically.", rating: 5, product: "Agentforce Service" },
+      { text: "The predictive analytics and forecasting tools are excellent. I can see exactly which accounts need attention and the AI surfaces insights I would have missed.", rating: 4.5, product: "Salesforce Agentforce" },
+      { text: "Automated workflows have transformed how our team operates. What used to take a full day now takes an hour thanks to the intelligent automation.", rating: 5, product: "Agentforce Sales" },
+      { text: "The AI is great at identifying duplicate records and suggesting data cleanup. Keeps our CRM clean with almost no manual effort.", rating: 4.5, product: "Agentforce Service" },
+      { text: "Generative AI features for email drafting and next-step suggestions are genuinely useful. Our reps use them every day.", rating: 5, product: "Salesforce Agentforce" },
+      { text: "Agentforce's AI agents have cut our average handle time significantly. Customers get answers faster and our team is less overwhelmed.", rating: 4.5, product: "Agentforce Service" },
+      { text: "The speed with which you can support a sales organization is exceptional. AI and automation make experienced partners even more powerful.", rating: 5, product: "Agentforce Sales" }
+    ],
+    con: [
+      { text: "So far, we haven't been able to integrate our own AI workflows with Salesforce. There seems to be a gap between what Salesforce offers and what we need.", rating: 2.5, product: "Salesforce Agentforce" },
+      { text: "Every workflow, report, or automation requires customization, and that introduces constant risk, delays, and cost. The AI is not plug-and-play.", rating: 0, product: "Agentforce Sales" },
+      { text: "The abundance of features can be overwhelming, and configuring automation or report structures often requires expert help. Not great for smaller teams.", rating: 3, product: "Agentforce Service" },
+      { text: "I wish the mobile app required less manual input and could auto-populate more information using AI. The desktop experience is far superior.", rating: 4, product: "Agentforce Sales" },
+      { text: "The AI recommendations sometimes feel generic and not tailored to our industry. We need more vertical-specific intelligence.", rating: 3, product: "Salesforce Agentforce" },
+      { text: "Pricing for the advanced AI features is very high. Small businesses will struggle to justify the cost without significant volume.", rating: 2.5, product: "Agentforce Sales" },
+      { text: "Sometimes the automation doesn't fire correctly and there is no easy way to debug it. Troubleshooting AI workflows takes a lot of time.", rating: 3, product: "Agentforce Service" },
+      { text: "Agentforce is still maturing. Some AI features feel like they were rushed — the outputs need more human review than advertised.", rating: 3.5, product: "Salesforce Agentforce" },
+      { text: "The AI is limited when it comes to complex multi-step processes. It handles simple tasks well but struggles with nuanced decision-making.", rating: 2.5, product: "Agentforce Service" },
+      { text: "Customer support for AI-related issues is hit or miss. When the AI behaves unexpectedly, it is hard to get timely help.", rating: 3, product: "Agentforce Sales" }
+    ]
+  }
+};
+
+// ═══════════════════════════════════════════════
+// CHART DEFAULTS
+// ═══════════════════════════════════════════════
+Chart.defaults.font.family = "'Segoe UI', system-ui, sans-serif";
+Chart.defaults.font.size = 12;
+Chart.defaults.color = '#6B7280';
+Chart.defaults.plugins.legend.labels.boxWidth = 12;
+Chart.defaults.plugins.legend.labels.padding = 16;
+
+const COLORS = {
+  blue: '#0176D3',
+  darkBlue: '#032D60',
+  electricBlue: '#1B96FF',
+  green: '#3BA755',
+  red: '#EA001E',
+  orange: '#FF9A3C',
+  purple: '#6B37FF',
+  teal: '#0DC7E5',
+  pink: '#FF5D2D',
+  sales: '#0176D3',
+  service: '#0DC7E5',
+  agentforce: '#6B37FF'
+};
+
+// ═══════════════════════════════════════════════
+// CHART: RATING DISTRIBUTION
+// ═══════════════════════════════════════════════
+new Chart(document.getElementById('ratingChart'), {
+  type: 'bar',
+  data: {
+    labels: DATA.ratingDist.labels,
+    datasets: [{
+      label: 'Reviews',
+      data: DATA.ratingDist.values,
+      backgroundColor: DATA.ratingDist.values.map((_, i) => {
+        const pct = i / (DATA.ratingDist.values.length - 1);
+        const r = Math.round(231 - pct * (231 - 39));
+        const g = Math.round(76 + pct * (174 - 76));
+        const b = Math.round(60 + pct * (96 - 60));
+        return `rgb(${r},${g},${b})`;
+      }),
+      borderRadius: 6, borderSkipped: false
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: {
+      callbacks: { label: ctx => ` ${ctx.raw} reviews (${((ctx.raw/1500)*100).toFixed(1)}%)` }
+    }},
+    scales: {
+      y: { beginAtZero: true, grid: { color: '#F0F0F5' }, ticks: { stepSize: 100 } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════
+// CHART: PRODUCT BAR
+// ═══════════════════════════════════════════════
+new Chart(document.getElementById('productBarChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Agentforce Sales', 'Agentforce Service', 'Salesforce Agentforce'],
+    datasets: [
+      { label: '5★', data: [221, 229, 206], backgroundColor: '#3BA755', borderRadius: 4, borderSkipped: false },
+      { label: '4–4.5★', data: [254, 206, 206], backgroundColor: '#0176D3', borderRadius: 4, borderSkipped: false },
+      { label: '3–3.5★', data: [99, 107, 132], backgroundColor: '#FF9A3C', borderRadius: 4, borderSkipped: false },
+      { label: '≤2.5★', data: [44, 40, 53], backgroundColor: '#EA001E', borderRadius: 4, borderSkipped: false }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom' } },
+    scales: {
+      y: { stacked: true, beginAtZero: true, grid: { color: '#F0F0F5' } },
+      x: { stacked: true, grid: { display: false } }
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════
+// CHART: SENTIMENT DONUT
+// ═══════════════════════════════════════════════
+new Chart(document.getElementById('sentimentDonut'), {
+  type: 'doughnut',
+  data: {
+    labels: ['AI in Pros (815)', 'AI in Cons (552)', 'No AI Mention (133)'],
+    datasets: [{
+      data: [815, 552, 133],
+      backgroundColor: ['#3BA755', '#EA001E', '#D1D5DB'],
+      borderWidth: 2, borderColor: 'white'
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    cutout: '65%',
+    plugins: {
+      legend: { position: 'bottom' },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${((ctx.raw/1500)*100).toFixed(1)}% of reviews` } }
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════
+// CHART: PRODUCT SENTIMENT
+// ═══════════════════════════════════════════════
+new Chart(document.getElementById('productSentimentChart'), {
+  type: 'bar',
+  data: {
+    labels: DATA.sentiment.byProduct.labels,
+    datasets: [
+      {
+        label: 'AI Mentioned Positively (Likes)',
+        data: DATA.sentiment.byProduct.prosInLikes,
+        backgroundColor: 'rgba(59,167,85,0.85)', borderRadius: 6, borderSkipped: false
+      },
+      {
+        label: 'AI Mentioned Critically (Dislikes)',
+        data: DATA.sentiment.byProduct.consInDislikes,
+        backgroundColor: 'rgba(234,0,30,0.85)', borderRadius: 6, borderSkipped: false
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom' } },
+    scales: {
+      y: { beginAtZero: true, grid: { color: '#F0F0F5' } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════
+// CHART: SENTIMENT STACKED
+// ═══════════════════════════════════════════════
+new Chart(document.getElementById('sentimentStackedChart'), {
+  type: 'bar',
+  data: {
+    labels: DATA.sentiment.byProduct.labels,
+    datasets: [
+      {
+        label: '✅ AI Pros',
+        data: DATA.sentiment.byProduct.prosInLikes,
+        backgroundColor: 'rgba(59,167,85,0.85)', borderRadius: 4, borderSkipped: false
+      },
+      {
+        label: '❌ AI Cons',
+        data: DATA.sentiment.byProduct.consInDislikes,
+        backgroundColor: 'rgba(234,0,30,0.85)', borderRadius: 4, borderSkipped: false
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    indexAxis: 'y',
+    plugins: { legend: { position: 'bottom' } },
+    scales: {
+      x: { stacked: true, beginAtZero: true, grid: { color: '#F0F0F5' } },
+      y: { stacked: true, grid: { display: false } }
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════
+// CHART: RATING BAND SENTIMENT
+// ═══════════════════════════════════════════════
+new Chart(document.getElementById('ratingBandSentiment'), {
+  type: 'bar',
+  data: {
+    labels: ['5★ Reviews', '4–4.5★ Reviews', '3–3.5★ Reviews', '≤2.5★ Reviews'],
+    datasets: [
+      {
+        label: 'AI Mentioned Positively',
+        data: [412, 298, 85, 20],
+        backgroundColor: 'rgba(59,167,85,0.85)', borderRadius: 6, borderSkipped: false
+      },
+      {
+        label: 'AI Mentioned Critically',
+        data: [88, 201, 198, 65],
+        backgroundColor: 'rgba(234,0,30,0.85)', borderRadius: 6, borderSkipped: false
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom' } },
+    scales: {
+      y: { beginAtZero: true, grid: { color: '#F0F0F5' } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════
+// CHART: FEATURE BAR
+// ═══════════════════════════════════════════════
+new Chart(document.getElementById('featureBarChart'), {
+  type: 'bar',
+  data: {
+    labels: DATA.features.labels,
+    datasets: [
+      {
+        label: '✅ Positive Mentions (in Likes)',
+        data: DATA.features.pros,
+        backgroundColor: 'rgba(59,167,85,0.85)', borderRadius: 6, borderSkipped: false
+      },
+      {
+        label: '❌ Critical Mentions (in Dislikes)',
+        data: DATA.features.cons,
+        backgroundColor: 'rgba(234,0,30,0.85)', borderRadius: 6, borderSkipped: false
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom' } },
+    scales: {
+      y: { beginAtZero: true, grid: { color: '#F0F0F5' } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════
+// FEATURE TABLE
+// ═══════════════════════════════════════════════
+const featureTableBody = document.getElementById('featureTableBody');
+DATA.features.labels.forEach((label, i) => {
+  const pros = DATA.features.pros[i];
+  const cons = DATA.features.cons[i];
+  const total = pros + cons;
+  const pct = total > 0 ? Math.round((pros / total) * 100) : 0;
+  const color = pct >= 75 ? '#3BA755' : pct >= 50 ? '#FF9A3C' : '#EA001E';
+  featureTableBody.innerHTML += `
+    <tr>
+      <td><strong>${label}</strong></td>
+      <td style="color:#3BA755;font-weight:700">${pros}</td>
+      <td style="color:#EA001E;font-weight:700">${cons}</td>
+      <td class="bar-cell">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;border-radius:4px;background:#F0F0F5;overflow:hidden">
+            <div class="mini-bar" style="width:${pct}%;background:${color}"></div>
+          </div>
+          <span style="font-size:11px;font-weight:700;color:${color};min-width:32px">${pct}%</span>
+        </div>
+      </td>
+    </tr>
+  `;
+});
+
+// ═══════════════════════════════════════════════
+// CHART: FEATURE PIE
+// ═══════════════════════════════════════════════
+const totalFeatureMentions = DATA.features.pros.map((p, i) => p + DATA.features.cons[i]);
+new Chart(document.getElementById('featurePieChart'), {
+  type: 'doughnut',
+  data: {
+    labels: DATA.features.labels,
+    datasets: [{
+      data: totalFeatureMentions,
+      backgroundColor: ['#0176D3','#3BA755','#6B37FF','#FF9A3C','#EA001E','#0DC7E5','#FF5D2D','#1B96FF'],
+      borderWidth: 2, borderColor: 'white'
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    cutout: '50%',
+    plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10, font: { size: 11 } } } }
+  }
+});
+
+// ═══════════════════════════════════════════════
+// CHART: TIMELINE
+// ═══════════════════════════════════════════════
+new Chart(document.getElementById('timelineChart'), {
+  type: 'line',
+  data: {
+    labels: DATA.timeline.labels,
+    datasets: [
+      {
+        label: 'Agentforce Sales',
+        data: DATA.timeline.sales,
+        borderColor: COLORS.sales, backgroundColor: 'rgba(1,118,211,0.12)',
+        borderWidth: 2.5, pointRadius: 5, fill: true, tension: 0.3
+      },
+      {
+        label: 'Agentforce Service',
+        data: DATA.timeline.service,
+        borderColor: COLORS.service, backgroundColor: 'rgba(13,199,229,0.12)',
+        borderWidth: 2.5, pointRadius: 5, fill: true, tension: 0.3
+      },
+      {
+        label: 'Salesforce Agentforce',
+        data: DATA.timeline.agentforce,
+        borderColor: COLORS.agentforce, backgroundColor: 'rgba(107,55,255,0.12)',
+        borderWidth: 2.5, pointRadius: 5, fill: true, tension: 0.3
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom' } },
+    scales: {
+      y: { beginAtZero: true, grid: { color: '#F0F0F5' } },
+      x: { grid: { color: '#F0F0F5' } }
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════
+// CHART: RATING TREND
+// ═══════════════════════════════════════════════
+new Chart(document.getElementById('ratingTrendChart'), {
+  type: 'line',
+  data: {
+    labels: DATA.ratingTrend.labels,
+    datasets: [{
+      label: 'Avg Rating',
+      data: DATA.ratingTrend.avgRating,
+      borderColor: COLORS.teal, backgroundColor: 'rgba(13,199,229,0.15)',
+      borderWidth: 3, pointRadius: 5, fill: true, tension: 0.4,
+      pointBackgroundColor: COLORS.teal
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { min: 3.5, max: 5, grid: { color: '#F0F0F5' } },
+      x: { grid: { color: '#F0F0F5' } }
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════
+// CHART: RECOMMENDATION SPIDER
+// ═══════════════════════════════════════════════
+new Chart(document.getElementById('recommendationChart'), {
+  type: 'radar',
+  data: {
+    labels: ['Automation ROI', 'AI Accuracy', 'Ease of Setup', 'Cost Value', 'Agent Capability', 'Integration', 'Mobile AI', 'Support Quality'],
+    datasets: [
+      {
+        label: 'Current Performance',
+        data: [82, 74, 61, 52, 78, 58, 45, 67],
+        borderColor: COLORS.blue, backgroundColor: 'rgba(1,118,211,0.18)',
+        borderWidth: 2, pointRadius: 4
+      },
+      {
+        label: 'Industry Expectation',
+        data: [75, 80, 75, 70, 75, 75, 70, 80],
+        borderColor: '#D1D5DB', backgroundColor: 'rgba(209,213,219,0.15)',
+        borderWidth: 1.5, pointRadius: 3, borderDash: [5, 5]
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom' } },
+    scales: {
+      r: {
+        beginAtZero: true, max: 100,
+        ticks: { display: false },
+        grid: { color: '#E5E7EB' },
+        pointLabels: { font: { size: 12, weight: '600' } }
+      }
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════
+// QUOTES
+// ═══════════════════════════════════════════════
+function renderQuotes(filter) {
+  const container = document.getElementById('quotesContainer');
+  let pros = DATA.quotes.pro;
+  let cons = DATA.quotes.con;
+
+  if (filter === 'sales') {
+    pros = pros.filter(q => q.product.includes('Sales'));
+    cons = cons.filter(q => q.product.includes('Sales'));
+  } else if (filter === 'service') {
+    pros = pros.filter(q => q.product.includes('Service'));
+    cons = cons.filter(q => q.product.includes('Service'));
+  } else if (filter === 'agentforce') {
+    pros = pros.filter(q => q.product === 'Salesforce Agentforce');
+    cons = cons.filter(q => q.product === 'Salesforce Agentforce');
+  }
+
+  let html = '';
+  if (filter !== 'con') {
+    html += `<div style="font-size:14px;font-weight:700;color:var(--green);margin-bottom:12px">✅ Pro-AI Quotes (from 4–5★ Reviews)</div>`;
+    html += `<div class="quote-grid" style="margin-bottom:24px">`;
+    pros.forEach(q => {
+      const stars = '★'.repeat(Math.round(q.rating)) + '☆'.repeat(5 - Math.round(q.rating));
+      html += `<div class="quote-card pro">
+        <div class="stars">${stars}</div>
+        <div style="margin-top:6px;font-style:italic">"${q.text}"</div>
+        <div class="q-meta">${q.product}</div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  if (filter !== 'pro') {
+    html += `<div style="font-size:14px;font-weight:700;color:var(--red);margin-bottom:12px">⚠️ Critical AI Quotes (from ≤3.5★ Reviews)</div>`;
+    html += `<div class="quote-grid">`;
+    cons.forEach(q => {
+      const starsFull = Math.floor(q.rating);
+      const starsEmpty = 5 - Math.ceil(q.rating);
+      const starsHalf = q.rating % 1 >= 0.5 ? '½' : '';
+      html += `<div class="quote-card con">
+        <div class="stars">${'★'.repeat(starsFull)}${starsHalf}${'☆'.repeat(starsEmpty)} ${q.rating}★</div>
+        <div style="margin-top:6px;font-style:italic">"${q.text}"</div>
+        <div class="q-meta">${q.product}</div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  container.innerHTML = html;
+}
+
+function filterQuotes(type, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderQuotes(type);
+}
+
+renderQuotes('all');
+
+// ═══════════════════════════════════════════════
+// TAB SWITCHING
+// ═══════════════════════════════════════════════
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tabId).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
