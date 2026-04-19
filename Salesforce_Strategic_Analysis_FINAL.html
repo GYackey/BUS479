@@ -1,0 +1,2031 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Salesforce Strategic Analysis</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+      :root {
+        --navy: #032d60;
+        --navy-2: #09356e;
+        --blue: #0176d3;
+        --blue-bright: #1b96ff;
+        --blue-soft: #eaf4ff;
+        --cyan: #00a1e0;
+        --ink: #171c24;
+        --text: #213547;
+        --muted: #5a6880;
+        --line: #d8e4f0;
+        --off-white: #f4f8fc;
+        --white: #ffffff;
+        --orange: #ff8c00;
+        --green: #1e7c34;
+        --red: #ba0517;
+        --shadow: 0 18px 42px rgba(3, 45, 96, 0.12);
+        --radius-lg: 22px;
+        --radius-md: 16px;
+        --radius-sm: 12px;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top right, rgba(0, 161, 224, 0.08), transparent 24%),
+          linear-gradient(180deg, #ffffff 0%, #f6f9fd 100%);
+        line-height: 1.65;
+      }
+
+      a {
+        color: var(--blue);
+      }
+
+      img {
+        max-width: 100%;
+        display: block;
+      }
+
+      nav {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.95rem 1.4rem;
+        background: rgba(3, 45, 96, 0.94);
+        backdrop-filter: blur(18px);
+        box-shadow: 0 2px 16px rgba(0, 0, 0, 0.22);
+      }
+
+      .nav-brand {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        color: var(--white);
+        text-decoration: none;
+      }
+
+      .nav-logo {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, var(--cyan), var(--blue));
+        font-size: 0.85rem;
+        font-weight: 800;
+      }
+
+      .nav-copy strong {
+        display: block;
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .nav-copy span {
+        display: block;
+        font-size: 0.74rem;
+        color: rgba(255, 255, 255, 0.68);
+      }
+
+      .nav-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        list-style: none;
+      }
+
+      .nav-links a {
+        padding: 0.45rem 0.7rem;
+        border-radius: 999px;
+        color: rgba(255, 255, 255, 0.74);
+        text-decoration: none;
+        font-size: 0.76rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      .nav-links a:hover,
+      .nav-links a:focus-visible {
+        color: var(--white);
+        background: rgba(255, 255, 255, 0.12);
+        outline: none;
+      }
+
+      .shell {
+        width: min(1180px, calc(100% - 32px));
+        margin: 0 auto;
+      }
+
+      .hero {
+        position: relative;
+        overflow: hidden;
+        margin: 1.25rem auto 0;
+        padding: 4.5rem 2rem 3rem;
+        border-radius: 30px;
+        background:
+          linear-gradient(135deg, rgba(2, 26, 58, 0.98) 0%, rgba(3, 45, 96, 0.96) 46%, rgba(9, 56, 120, 0.95) 100%);
+        color: var(--white);
+        box-shadow: var(--shadow);
+      }
+
+      .hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 80% 18%, rgba(27, 150, 255, 0.2), transparent 24%),
+          linear-gradient(120deg, transparent 0 48%, rgba(255, 255, 255, 0.04) 48% 52%, transparent 52%);
+        pointer-events: none;
+      }
+
+      .hero-grid {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: 1.3fr 0.8fr;
+        gap: 1.75rem;
+        align-items: end;
+      }
+
+      .eyebrow {
+        display: inline-block;
+        margin-bottom: 0.9rem;
+        font-size: 0.76rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: var(--cyan);
+      }
+
+      .hero h1 {
+        font-family: Georgia, serif;
+        font-size: clamp(2.4rem, 5vw, 4rem);
+        line-height: 1.03;
+        letter-spacing: -0.03em;
+        max-width: 11ch;
+      }
+
+      .hero h1 span {
+        color: #82d6ff;
+      }
+
+      .hero-copy {
+        margin-top: 1rem;
+        max-width: 62ch;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1rem;
+      }
+
+      .hero-aside {
+        padding: 1.35rem;
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.09);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        backdrop-filter: blur(10px);
+      }
+
+      .hero-aside h2 {
+        color: var(--white);
+        font-size: 1.02rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .hero-aside p {
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 0.95rem;
+      }
+
+      .hero-stats {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 1px;
+        margin-top: 2rem;
+        border-radius: 18px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.12);
+      }
+
+      .hero-stat {
+        padding: 1.2rem 0.9rem;
+        background: rgba(255, 255, 255, 0.05);
+        text-align: center;
+      }
+
+      .hero-stat strong {
+        display: block;
+        font-size: 1.65rem;
+        line-height: 1;
+      }
+
+      .hero-stat span {
+        display: block;
+        margin-top: 0.45rem;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: rgba(255, 255, 255, 0.66);
+      }
+
+      .tabs-wrap {
+        margin: 1.5rem auto 0;
+        border: 1px solid rgba(3, 45, 96, 0.08);
+        border-radius: 28px;
+        background: rgba(255, 255, 255, 0.86);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .tablist {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0;
+        padding: 0.65rem;
+        border-bottom: 1px solid var(--line);
+        background: linear-gradient(180deg, #fbfdff 0%, #f2f7fb 100%);
+      }
+
+      .tab-button {
+        flex: 1 1 220px;
+        border: 0;
+        border-radius: 16px;
+        background: transparent;
+        padding: 1rem 1rem 1.05rem;
+        color: var(--muted);
+        text-align: left;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+      }
+
+      .tab-button strong {
+        display: block;
+        color: var(--navy);
+        font-size: 1rem;
+        margin-bottom: 0.28rem;
+      }
+
+      .tab-button span {
+        display: block;
+        font-size: 0.86rem;
+        line-height: 1.45;
+      }
+
+      .tab-button[aria-selected="true"] {
+        background: linear-gradient(180deg, rgba(1, 118, 211, 0.12), rgba(1, 118, 211, 0.04));
+        color: var(--text);
+      }
+
+      .tab-button:hover,
+      .tab-button:focus-visible {
+        background: rgba(1, 118, 211, 0.08);
+        color: var(--text);
+        outline: none;
+      }
+
+      .tab-panels {
+        padding: 1.75rem;
+      }
+
+      .tab-panel {
+        display: none;
+      }
+
+      .tab-panel.active {
+        display: block;
+        animation: fadeUp 0.28s ease;
+      }
+
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .section-tag {
+        display: inline-block;
+        margin-bottom: 0.7rem;
+        color: var(--blue);
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      h2 {
+        font-family: Georgia, serif;
+        font-size: clamp(1.8rem, 3.3vw, 2.65rem);
+        line-height: 1.1;
+        letter-spacing: -0.03em;
+        color: var(--navy);
+        margin-bottom: 0.8rem;
+      }
+
+      .section-deck {
+        max-width: 72ch;
+        color: var(--muted);
+        margin-bottom: 1.5rem;
+      }
+
+      .divider {
+        width: 54px;
+        height: 4px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--blue), var(--cyan));
+        margin-bottom: 1.4rem;
+      }
+
+      .grid-2,
+      .grid-3,
+      .grid-aside {
+        display: grid;
+        gap: 1.25rem;
+      }
+
+      .grid-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .grid-aside {
+        grid-template-columns: 1.15fr 0.85fr;
+        align-items: start;
+      }
+
+      .card {
+        background: var(--white);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-md);
+        padding: 1.35rem;
+      }
+
+      .card h3 {
+        font-size: 1.05rem;
+        color: var(--navy);
+        margin-bottom: 0.45rem;
+      }
+
+      .card p,
+      .card li {
+        color: var(--muted);
+        font-size: 0.93rem;
+      }
+
+      .card ul {
+        padding-left: 1.15rem;
+        margin-top: 0.7rem;
+      }
+
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.35rem;
+      }
+
+      .stat-card {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 1rem;
+        background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+      }
+
+      .stat-card strong {
+        display: block;
+        color: var(--navy);
+        font-size: 1.45rem;
+      }
+
+      .stat-card span {
+        display: block;
+        margin-top: 0.35rem;
+        color: var(--muted);
+        font-size: 0.84rem;
+      }
+
+      .timeline-list {
+        list-style: none;
+        display: grid;
+        gap: 0.7rem;
+      }
+
+      .timeline-list li {
+        display: grid;
+        grid-template-columns: 72px 1fr;
+        gap: 0.9rem;
+        align-items: start;
+      }
+
+      .year {
+        padding: 0.28rem 0.5rem;
+        border-radius: 999px;
+        background: var(--blue-soft);
+        color: var(--blue);
+        font-size: 0.78rem;
+        font-weight: 800;
+        text-align: center;
+      }
+
+      .visual-frame {
+        overflow: hidden;
+        border-radius: 20px;
+        border: 1px solid var(--line);
+        background: #edf5ff;
+        box-shadow: var(--shadow);
+      }
+
+      .visual-frame figcaption {
+        padding: 0.85rem 1rem 1rem;
+        font-size: 0.84rem;
+        color: var(--muted);
+        background: #ffffff;
+      }
+
+      .highlights-grid,
+      .pressure-grid,
+      .quote-grid,
+      .risk-grid,
+      .citation-grid {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .highlights-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .pressure-grid,
+      .risk-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .quote-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .highlight-card {
+        position: relative;
+        padding: 1.25rem;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: var(--white);
+      }
+
+      .highlight-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 5px;
+        height: 100%;
+        border-radius: 16px 0 0 16px;
+        background: linear-gradient(180deg, var(--blue), var(--cyan));
+      }
+
+      .highlight-card small,
+      .pressure-card small,
+      .quote-card small,
+      .risk-card small,
+      .recommend-card small {
+        display: inline-block;
+        margin-bottom: 0.55rem;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--blue);
+      }
+
+      .highlight-card h3,
+      .pressure-card h3,
+      .quote-card h3,
+      .risk-card h3,
+      .recommend-card h3 {
+        color: var(--navy);
+        font-size: 1rem;
+        margin-bottom: 0.35rem;
+      }
+
+      .pressure-card,
+      .quote-card,
+      .risk-card,
+      .recommend-card {
+        padding: 1.25rem;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: var(--white);
+      }
+
+      .pressure-card {
+        background: linear-gradient(180deg, #ffffff 0%, #f8fbfe 100%);
+      }
+
+      .dark-band {
+        margin-top: 1.25rem;
+        padding: 1.3rem;
+        border-radius: 18px;
+        background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%);
+        color: rgba(255, 255, 255, 0.86);
+      }
+
+      .dark-band strong {
+        color: var(--white);
+      }
+
+      .chart-card {
+        background: var(--white);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 1.2rem;
+      }
+
+      .dashboard-card {
+        padding: 1.35rem;
+        border-radius: 20px;
+        border: 1px solid var(--line);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(245, 250, 255, 0.98) 100%);
+        box-shadow: var(--shadow);
+      }
+
+      .dashboard-top {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .dashboard-top h3 {
+        color: var(--navy);
+        font-size: 1.12rem;
+      }
+
+      .dashboard-top p {
+        color: var(--muted);
+        font-size: 0.88rem;
+        max-width: 62ch;
+      }
+
+      .dashboard-controls {
+        display: inline-flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+      }
+
+      .dashboard-btn {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: #fff;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 0.76rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        padding: 0.58rem 0.82rem;
+        text-transform: uppercase;
+        transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+      }
+
+      .dashboard-btn.active,
+      .dashboard-btn:hover,
+      .dashboard-btn:focus-visible {
+        background: var(--navy);
+        border-color: var(--navy);
+        color: var(--white);
+        outline: none;
+      }
+
+      .kpi-dashboard {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.9rem;
+        margin-bottom: 1rem;
+      }
+
+      .kpi-dashboard .stat-card {
+        background: #fff;
+      }
+
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 1rem;
+        align-items: stretch;
+      }
+
+      .insight-panel {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: #fff;
+        padding: 1.15rem;
+      }
+
+      .insight-panel h4 {
+        color: var(--navy);
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .insight-panel p {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .insight-list {
+        margin-top: 0.8rem;
+        padding-left: 1.15rem;
+      }
+
+      .insight-list li {
+        color: var(--muted);
+        font-size: 0.88rem;
+        margin-bottom: 0.45rem;
+      }
+
+      .chart-title {
+        color: var(--navy);
+        font-size: 0.94rem;
+        font-weight: 800;
+        margin-bottom: 0.2rem;
+      }
+
+      .chart-sub {
+        color: var(--muted);
+        font-size: 0.8rem;
+        margin-bottom: 0.95rem;
+      }
+
+      .chart-container {
+        position: relative;
+        height: 240px;
+      }
+
+      .mini-bars {
+        display: grid;
+        gap: 0.9rem;
+      }
+
+      .bar-row {
+        display: grid;
+        grid-template-columns: 180px 1fr 48px;
+        gap: 0.9rem;
+        align-items: center;
+      }
+
+      .bar-row label {
+        color: var(--navy);
+        font-size: 0.84rem;
+        font-weight: 700;
+      }
+
+      .track {
+        position: relative;
+        height: 10px;
+        background: #e6eff8;
+        border-radius: 999px;
+        overflow: hidden;
+      }
+
+      .fill {
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--blue), var(--cyan));
+      }
+
+      .fill.orange {
+        background: linear-gradient(90deg, #ff8c00, #ffc264);
+      }
+
+      .quote-card {
+        background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+      }
+
+      .quote-card blockquote {
+        color: var(--text);
+        font-style: italic;
+        font-size: 0.92rem;
+      }
+
+      .quote-card cite {
+        display: block;
+        margin-top: 0.75rem;
+        color: var(--muted);
+        font-style: normal;
+        font-size: 0.82rem;
+      }
+
+      .comparison-table,
+      .risk-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .comparison-table th,
+      .comparison-table td,
+      .risk-table th,
+      .risk-table td {
+        text-align: left;
+        padding: 0.8rem 0.75rem;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+
+      .comparison-table th,
+      .risk-table th {
+        background: #eef6ff;
+        color: var(--navy);
+        font-size: 0.72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .comparison-table tr:last-child td,
+      .risk-table tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .tag {
+        display: inline-block;
+        padding: 0.24rem 0.55rem;
+        border-radius: 999px;
+        font-size: 0.68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .tag.high {
+        background: #fdecea;
+        color: var(--red);
+      }
+
+      .tag.medium {
+        background: #fff3cd;
+        color: #7b5b00;
+      }
+
+      .tag.low {
+        background: #e3f7ea;
+        color: var(--green);
+      }
+
+      .citation-card {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 1.1rem;
+        background: var(--white);
+      }
+
+      .iframe-shell {
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: var(--shadow);
+      }
+
+      .iframe-shell iframe {
+        display: block;
+        width: 100%;
+        min-height: 980px;
+        border: 0;
+        background: #fff;
+      }
+
+      .agentforce-summary {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.9rem;
+        margin-bottom: 1.1rem;
+      }
+
+      .bibliography-intro {
+        padding: 1.15rem 1.2rem;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+        margin-bottom: 1.2rem;
+      }
+
+      .bibliography-intro p {
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .bibliography-list {
+        margin: 0;
+        padding-left: 1.25rem;
+        display: grid;
+        gap: 0.78rem;
+      }
+
+      .bibliography-list li {
+        color: var(--text);
+        line-height: 1.62;
+      }
+
+      .bibliography-list a {
+        word-break: break-word;
+      }
+
+      .citation-card h3 {
+        color: var(--navy);
+        font-size: 0.98rem;
+        margin-bottom: 0.55rem;
+      }
+
+      .citation-card ul {
+        list-style: none;
+        display: grid;
+        gap: 0.48rem;
+      }
+
+      .citation-card a {
+        text-decoration: none;
+        font-size: 0.88rem;
+        word-break: break-word;
+      }
+
+      .closing {
+        margin-top: 1.25rem;
+        padding: 1.4rem;
+        border-radius: 18px;
+        background: linear-gradient(135deg, rgba(3, 45, 96, 0.96), rgba(9, 53, 110, 0.95));
+        color: var(--white);
+      }
+
+      .closing h3 {
+        color: var(--white);
+        margin-bottom: 0.4rem;
+      }
+
+      .closing p {
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      footer {
+        width: min(1180px, calc(100% - 32px));
+        margin: 1.2rem auto 2rem;
+        padding: 1.2rem 1.4rem;
+        border-radius: 18px;
+        background: #081c39;
+        color: rgba(255, 255, 255, 0.66);
+        font-size: 0.82rem;
+      }
+
+      @media (max-width: 1050px) {
+        .hero-grid,
+        .grid-aside,
+        .grid-2,
+        .grid-3,
+        .highlights-grid,
+        .quote-grid,
+        .pressure-grid,
+        .risk-grid,
+        .citation-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .stat-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .dashboard-grid,
+        .hero-stats {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .agentforce-summary,
+        .kpi-dashboard {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 760px) {
+        nav {
+          padding: 0.9rem 1rem;
+        }
+
+        .nav-links {
+          display: none;
+        }
+
+        .shell {
+          width: min(100% - 16px, 1180px);
+        }
+
+        .hero {
+          padding: 3.2rem 1.2rem 2rem;
+          border-radius: 22px;
+        }
+
+        .tab-panels {
+          padding: 1rem;
+        }
+
+        .tablist {
+          padding: 0.45rem;
+        }
+
+        .hero-stats,
+        .stat-grid,
+        .agentforce-summary,
+        .kpi-dashboard,
+        .dashboard-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .timeline-list li,
+        .bar-row {
+          grid-template-columns: 1fr;
+        }
+
+        .bar-row {
+          gap: 0.4rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <a href="#top" class="nav-brand">
+        <div class="nav-logo">SF</div>
+        <div class="nav-copy">
+          <strong>Strategic Analysis</strong>
+          <span>Salesforce · BUS 479</span>
+        </div>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#top">Top</a></li>
+        <li><a href="#tab-company">Company</a></li>
+        <li><a href="#tab-challenge">Challenge</a></li>
+        <li><a href="#tab-proof">Proof</a></li>
+        <li><a href="#tab-agentforce">Agentforce</a></li>
+        <li><a href="#tab-playbook">Playbook</a></li>
+        <li><a href="#tab-bibliography">Bibliography</a></li>
+      </ul>
+    </nav>
+
+    <main id="top" class="shell">
+      <section class="hero">
+        <div class="hero-grid">
+          <div>
+            <span class="eyebrow">Spring 2026 · Team Strategic Analysis</span>
+            <h1>Salesforce: balancing <span>margin discipline</span> with the AI platform race</h1>
+            <p class="hero-copy">
+              This version combines the stronger story-driven tab structure from the first site with the
+              cleaner formatting, scannable cards, and chart-forward presentation style of the second.
+              The result is a narrative website that moves from company context to strategic tension,
+              then into evidence and a practical recommendation path.
+            </p>
+          </div>
+          <aside class="hero-aside">
+            <h2>Central argument</h2>
+            <p>
+              Salesforce does not need more AI ambition. It needs a more deliberate rollout of Agentforce,
+              paired with a clearer monetization strategy around Data Cloud and a stronger proof-of-value story.
+            </p>
+          </aside>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <strong>$37.9B</strong>
+            <span>FY2025 revenue</span>
+          </div>
+          <div class="hero-stat">
+            <strong>20.7%</strong>
+            <span>CRM market share</span>
+          </div>
+          <div class="hero-stat">
+            <strong>150K+</strong>
+            <span>customers</span>
+          </div>
+          <div class="hero-stat">
+            <strong>13 yrs</strong>
+            <span>consecutive CRM leader</span>
+          </div>
+          <div class="hero-stat">
+            <strong>$1.2B</strong>
+            <span>Data Cloud + AI ARR</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="tabs-wrap">
+        <div class="tablist" role="tablist" aria-label="Strategic narrative">
+          <button class="tab-button" id="tab-button-company" role="tab" aria-controls="tab-company" aria-selected="true" tabindex="0" data-tab="company">
+            <strong>The Company</strong>
+            <span>Who Salesforce is, how it became category-defining, and which assets make it structurally powerful.</span>
+          </button>
+          <button class="tab-button" id="tab-button-challenge" role="tab" aria-controls="tab-challenge" aria-selected="false" tabindex="-1" data-tab="challenge">
+            <strong>The Strategic Challenge</strong>
+            <span>Why the AI push collides with customer readiness, Microsoft bundling, and investor discipline.</span>
+          </button>
+          <button class="tab-button" id="tab-button-proof" role="tab" aria-controls="tab-proof" aria-selected="false" tabindex="-1" data-tab="proof">
+            <strong>The Proof</strong>
+            <span>Financial trends, review data, interviews, and embedded visuals that validate the thesis.</span>
+          </button>
+          <button class="tab-button" id="tab-button-agentforce" role="tab" aria-controls="tab-agentforce" aria-selected="false" tabindex="-1" data-tab="agentforce">
+            <strong>Agentforce Analysis</strong>
+            <span>Survey results, qualitative patterns, and the separate customer-adoption dashboard in a dedicated tab.</span>
+          </button>
+          <button class="tab-button" id="tab-button-playbook" role="tab" aria-controls="tab-playbook" aria-selected="false" tabindex="-1" data-tab="playbook">
+            <strong>The Playbook</strong>
+            <span>A modular rollout, Data Cloud monetization, risk controls, and what success should look like next.</span>
+          </button>
+          <button class="tab-button" id="tab-button-bibliography" role="tab" aria-controls="tab-bibliography" aria-selected="false" tabindex="-1" data-tab="bibliography">
+            <strong>Bibliography</strong>
+            <span>Full formatted citations and source transparency for the analysis, research inputs, and supporting tools.</span>
+          </button>
+        </div>
+
+        <div class="tab-panels">
+          <section class="tab-panel active" id="tab-company" role="tabpanel" aria-labelledby="tab-button-company">
+            <span class="section-tag">Company Profile</span>
+            <h2>The company that changed how enterprise software gets delivered</h2>
+            <p class="section-deck">
+              Salesforce began with a simple insight in 1999: CRM should be delivered over the internet,
+              not installed on corporate servers. That SaaS-first thesis eventually expanded into a full
+              platform play that now spans applications, data infrastructure, AI, integration, analytics,
+              and partner ecosystems.
+            </p>
+            <div class="divider"></div>
+
+            <div class="stat-grid">
+              <div class="stat-card">
+                <strong>1999</strong>
+                <span>Founded in San Francisco by Marc Benioff and co-founders.</span>
+              </div>
+              <div class="stat-card">
+                <strong>9,000+</strong>
+                <span>Apps in the AppExchange ecosystem extending the platform.</span>
+              </div>
+              <div class="stat-card">
+                <strong>13M+</strong>
+                <span>Trailhead learners reinforcing adoption and talent supply.</span>
+              </div>
+              <div class="stat-card">
+                <strong>$700M+</strong>
+                <span>Philanthropic impact linked to the 1-1-1 model and Ohana culture.</span>
+              </div>
+            </div>
+
+            <div class="grid-aside">
+              <div class="card">
+                <h3>Why Salesforce became category-defining</h3>
+                <p>
+                  Salesforce did not just build a CRM product. It built an enterprise operating layer around
+                  customer relationships. Sales, service, marketing, commerce, analytics, integration, and now
+                  agentic AI all sit inside one expanding system. That is why its story matters before the analysis
+                  turns critical: the company is not a speculative AI startup. It is the incumbent platform trying
+                  to reinvent itself without breaking the trust and scale that made it powerful.
+                </p>
+                <ul>
+                  <li>SaaS CRM replaced hardware-heavy, on-premise deployment models.</li>
+                  <li>AppExchange created network effects and high switching costs.</li>
+                  <li>MuleSoft, Tableau, and Slack widened the portfolio beyond core CRM.</li>
+                  <li>Data Cloud and Agentforce now anchor the next strategic chapter.</li>
+                </ul>
+              </div>
+              <figure class="visual-frame">
+                <img src="ppt_final_extract/ppt/media/image9.png" alt="Salesforce key inflection points timeline" />
+                <figcaption>
+                  Embedded visual from the team deck: the key milestones that shaped Salesforce's platform evolution.
+                </figcaption>
+              </figure>
+            </div>
+
+            <div class="grid-2" style="margin-top: 1.25rem;">
+              <div class="card">
+                <h3>Leadership and identity</h3>
+                <p>
+                  Marc Benioff has long positioned Salesforce as both a software leader and a values-driven company.
+                  Trust, customer success, innovation, equality, and sustainability are part of the public brand,
+                  while the Ohana concept has served as an internal cultural narrative and external differentiator.
+                  That identity has helped attract talent and loyalty, but it also raises the stakes when the company
+                  makes aggressive moves that customers or employees perceive as rushed.
+                </p>
+              </div>
+              <div class="card">
+                <h3>Milestones that matter strategically</h3>
+                <ul class="timeline-list">
+                  <li><span class="year">2000</span><span>The "End of Software" campaign reframed enterprise buying behavior.</span></li>
+                  <li><span class="year">2004</span><span>The IPO gave Salesforce capital and legitimacy as a SaaS pioneer.</span></li>
+                  <li><span class="year">2005</span><span>AppExchange began compounding ecosystem-driven lock-in.</span></li>
+                  <li><span class="year">2018-21</span><span>MuleSoft, Tableau, and Slack broadened the platform's reach.</span></li>
+                  <li><span class="year">2024</span><span>Agentforce launched and AI became central to the growth story.</span></li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <section class="tab-panel" id="tab-challenge" role="tabpanel" aria-labelledby="tab-button-challenge">
+            <span class="section-tag">Strategic Tension</span>
+            <h2>Salesforce is trying to lead the AI era while the market is still negotiating the terms</h2>
+            <p class="section-deck">
+              The challenge is not whether AI matters. It is whether Salesforce can accelerate into an AI-native
+              future without forcing customers into adoption patterns they are not ready to support and without
+              undermining the profitability discipline investors now expect.
+            </p>
+            <div class="divider"></div>
+
+            <div class="highlights-grid">
+              <div class="highlight-card">
+                <small>Finding 01</small>
+                <h3>Growth is still strong, but no longer the only scorecard</h3>
+                <p>
+                  A decade of scale created a CRM leader, but slowing top-line growth means execution quality,
+                  margin preservation, and customer confidence matter more than ever.
+                </p>
+              </div>
+              <div class="highlight-card">
+                <small>Finding 02</small>
+                <h3>Microsoft is changing the procurement game</h3>
+                <p>
+                  Dynamics 365 plus Copilot can ride inside broader Microsoft 365 relationships, which shifts
+                  competition from feature comparison to bundle economics and enterprise purchasing leverage.
+                </p>
+              </div>
+              <div class="highlight-card">
+                <small>Finding 03</small>
+                <h3>AI enthusiasm exceeds rollout readiness</h3>
+                <p>
+                  Customers want AI, but many still prefer pilots, staged use cases, and visible ROI gates
+                  over an all-in platform transformation.
+                </p>
+              </div>
+            </div>
+
+            <div class="grid-2" style="margin-top: 1.25rem;">
+              <div class="chart-card">
+                <div class="chart-title">CRM Market Share by Vendor</div>
+                <div class="chart-sub">Salesforce leads, but nearly four-fifths of the market remains with other players.</div>
+                <div class="chart-container"><canvas id="marketShareChart"></canvas></div>
+              </div>
+              <div class="card">
+                <h3>Why the market is attractive and dangerous at the same time</h3>
+                <p>
+                  CRM remains a large, expanding category, but fragmentation cuts both ways. It means growth opportunity
+                  still exists, yet it also means customers have many ways to assemble adjacent solutions, especially
+                  when AI capabilities become bundled into other enterprise contracts.
+                </p>
+                <div class="mini-bars" style="margin-top: 1rem;">
+                  <div class="bar-row">
+                    <label>Buyer power</label>
+                    <div class="track"><div class="fill" style="width: 54%;"></div></div>
+                    <span>Med</span>
+                  </div>
+                  <div class="bar-row">
+                    <label>Substitutes</label>
+                    <div class="track"><div class="fill orange" style="width: 88%;"></div></div>
+                    <span>High</span>
+                  </div>
+                  <div class="bar-row">
+                    <label>Rivalry</label>
+                    <div class="track"><div class="fill orange" style="width: 92%;"></div></div>
+                    <span>Intense</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="pressure-grid" style="margin-top: 1.25rem;">
+              <div class="pressure-card">
+                <small>Pressure 01</small>
+                <h3>Enterprise AI adoption is still uneven</h3>
+                <p>
+                  Large customers are still in the proof-of-concept phase more often than not. That means appetite is real,
+                  but scale decisions remain cautious.
+                </p>
+              </div>
+              <div class="pressure-card">
+                <small>Pressure 02</small>
+                <h3>Agentforce sentiment trails core platform sentiment</h3>
+                <p>
+                  Customers praise automation, dashboards, and platform depth, but AI-specific satisfaction is materially lower.
+                </p>
+              </div>
+              <div class="pressure-card">
+                <small>Pressure 03</small>
+                <h3>Margin discipline limits the cost of experimentation</h3>
+                <p>
+                  After activist pressure in 2023, the company is rewarded for profitability. That narrows tolerance for a messy rollout.
+                </p>
+              </div>
+              <div class="pressure-card">
+                <small>Pressure 04</small>
+                <h3>The threat is structural, not temporary</h3>
+                <p>
+                  Microsoft is not just another rival product. It is a procurement shortcut for enterprises already anchored in M365.
+                </p>
+              </div>
+            </div>
+
+            <div class="dark-band">
+              <strong>Strategic problem statement:</strong> Salesforce's AI rollout is moving faster than the market's
+              readiness to absorb it. That creates a mismatch between what the company is trying to sell and what many
+              customers are prepared to adopt, justify, secure, and scale.
+            </div>
+          </section>
+
+          <section class="tab-panel" id="tab-proof" role="tabpanel" aria-labelledby="tab-button-proof">
+            <span class="section-tag">Evidence</span>
+            <h2>The strongest evidence is that every major signal points in the same direction</h2>
+            <p class="section-deck">
+              Financial performance, review sentiment, and interviews all support the same conclusion:
+              Salesforce's platform remains structurally strong, but the AI layer needs a more careful adoption path.
+            </p>
+            <div class="divider"></div>
+
+            <div class="dashboard-card" style="margin-bottom: 1.25rem;">
+              <div class="dashboard-top">
+                <div>
+                  <h3>Interactive Financial Dashboard</h3>
+                  <p>
+                    The dashboard below highlights the operating reset, growth deceleration, and segment mix shift
+                    behind the broader strategic narrative. Each view isolates a different financial lens on the same question:
+                    whether Salesforce can scale AI while preserving the discipline the market now expects.
+                  </p>
+                </div>
+                <div class="dashboard-controls" role="toolbar" aria-label="Financial dashboard views">
+                  <button class="dashboard-btn active" type="button" data-dashboard-view="overview">Overview</button>
+                  <button class="dashboard-btn" type="button" data-dashboard-view="margins">Margins</button>
+                  <button class="dashboard-btn" type="button" data-dashboard-view="segments">Segments</button>
+                </div>
+              </div>
+
+              <div class="kpi-dashboard">
+                <div class="stat-card">
+                  <strong id="dashboard-kpi-1">$41.5B</strong>
+                  <span id="dashboard-kpi-1-label">FY2026 revenue</span>
+                </div>
+                <div class="stat-card">
+                  <strong id="dashboard-kpi-2">~9%</strong>
+                  <span id="dashboard-kpi-2-label">Guided growth rate</span>
+                </div>
+                <div class="stat-card">
+                  <strong id="dashboard-kpi-3">20.1%</strong>
+                  <span id="dashboard-kpi-3-label">Operating margin</span>
+                </div>
+                <div class="stat-card">
+                  <strong id="dashboard-kpi-4">$1.2B</strong>
+                  <span id="dashboard-kpi-4-label">Data Cloud + AI ARR</span>
+                </div>
+              </div>
+
+              <div class="dashboard-grid">
+                <div class="chart-card">
+                  <div class="chart-title" id="financial-dashboard-title">Revenue Growth and Margin Transition</div>
+                  <div class="chart-sub" id="financial-dashboard-subtitle">Scale remains impressive, but valuation logic now centers on profitability and execution discipline.</div>
+                  <div class="chart-container"><canvas id="financialDashboardChart"></canvas></div>
+                </div>
+                <aside class="insight-panel">
+                  <h4 id="financial-dashboard-insight-title">Executive readout</h4>
+                  <p id="financial-dashboard-insight-copy">
+                    Salesforce's financial profile reflects a company moving from expansion-at-all-costs into a more selective,
+                    margin-conscious growth model.
+                  </p>
+                  <ul class="insight-list" id="financial-dashboard-insight-list">
+                    <li>Revenue continues to expand, but the slope is flattening.</li>
+                    <li>Margin improvement has become central to investor confidence.</li>
+                    <li>Data Cloud provides one of the clearest paths to re-accelerated growth.</li>
+                  </ul>
+                </aside>
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="chart-card">
+                <div class="chart-title">Revenue Scale vs. Margin Reset</div>
+                <div class="chart-sub">Long-run expansion remains impressive, but the business has clearly pivoted toward discipline.</div>
+                <div class="chart-container"><canvas id="revenueMarginChart"></canvas></div>
+              </div>
+              <div class="chart-card">
+                <div class="chart-title">Revenue by Segment</div>
+                <div class="chart-sub">Revenue by segment is shown in ($) billions; platform, integration, and analytics are carrying more of the growth story.</div>
+                <div class="chart-container"><canvas id="segmentChart"></canvas></div>
+              </div>
+            </div>
+
+            <div class="grid-aside" style="margin-top: 1.25rem;">
+              <figure class="visual-frame">
+                <img src="ppt_final_extract/ppt/media/image16.png" alt="G2 praise versus criticism across 13 topics" />
+                <figcaption>
+                  Embedded deck visualization: customer praise clusters around usability, sales tools, and platform depth,
+                  while criticism is concentrated in pricing, setup complexity, and AI maturity.
+                </figcaption>
+              </figure>
+              <div class="card">
+                <h3>Review signal at a glance</h3>
+                <div class="mini-bars" style="margin-top: 0.6rem;">
+                  <div class="bar-row">
+                    <label>Overall 4-5 star reviews</label>
+                    <div class="track"><div class="fill" style="width: 86.1%;"></div></div>
+                    <span>86%</span>
+                  </div>
+                  <div class="bar-row">
+                    <label>Automation sentiment</label>
+                    <div class="track"><div class="fill" style="width: 86%;"></div></div>
+                    <span>86%</span>
+                  </div>
+                  <div class="bar-row">
+                    <label>Predictive analytics</label>
+                    <div class="track"><div class="fill" style="width: 90%;"></div></div>
+                    <span>90%</span>
+                  </div>
+                  <div class="bar-row">
+                    <label>Agentforce sentiment</label>
+                    <div class="track"><div class="fill orange" style="width: 64%;"></div></div>
+                    <span>64%</span>
+                  </div>
+                </div>
+                <p style="margin-top: 1rem;">
+                  That gap matters. Customers already trust the platform's fundamentals. The weakness is specifically in the AI rollout,
+                  where pricing, implementation complexity, and perceived immaturity show up repeatedly.
+                </p>
+              </div>
+            </div>
+
+            <div class="quote-grid" style="margin-top: 1.25rem;">
+              <div class="quote-card">
+                <small>External Expert</small>
+                <blockquote>
+                  "Best step forward is to keep Agentforce like Lightning. Keep backwards compatibility and let customers deliberately turn it on."
+                </blockquote>
+                <cite>Dr. Seth Kinnet</cite>
+              </div>
+              <div class="quote-card">
+                <small>Salesforce Insider</small>
+                <blockquote>
+                  "Many larger enterprise customers are still in the infancy phase of deciding what their AI strategy will be. Many are buying smaller proofs of concept rather than going all in."
+                </blockquote>
+                <cite>Paul Chodosh, Senior Account Director</cite>
+              </div>
+              <div class="quote-card">
+                <small>Technical Perspective</small>
+                <blockquote>
+                  "The applied security of the data used in Salesforce products is the one area not mentioned often, and it's critical."
+                </blockquote>
+                <cite>Stephen Ashworth, Software Engineer &amp; CTO</cite>
+              </div>
+            </div>
+
+            <div class="grid-2" style="margin-top: 1.25rem;">
+              <div class="card">
+                <h3>VRIO interpretation</h3>
+                <p>
+                  The most durable advantages are AppExchange, Trailblazer, Data Cloud, and the broader installed base.
+                  These are valuable, rare, difficult to imitate, and embedded in the organization. Agentforce looks promising,
+                  but it is still an emerging advantage rather than a proven moat. Slack remains the weakest strategic link.
+                </p>
+              </div>
+              <div class="card">
+                <h3>Bottom line from the evidence</h3>
+                <p>
+                  The evidence does not argue that Salesforce is over. It argues that Salesforce's strongest structural assets
+                  should be used to slow adoption risk, not amplify it. A smarter rollout would let the company leverage its moat
+                  instead of betting the narrative on immediate AI saturation.
+                </p>
+              </div>
+            </div>
+
+            <div class="card" style="margin-top: 1.25rem;">
+              <h3>Customer survey signal</h3>
+              <p>
+                The customer-survey work adds a useful counterweight to the broader G2 scrape. The survey sample is small,
+                but it reinforces the same pattern: respondents who are already using Agentforce report favorable workflow fit
+                and value perception, while the dominant frictions are training, organizational change, and rollout support rather
+                than outright rejection of the product concept.
+              </p>
+              <div class="agentforce-summary" style="margin-top: 1rem;">
+                <div class="stat-card">
+                  <strong>5</strong>
+                  <span>survey respondents</span>
+                </div>
+                <div class="stat-card">
+                  <strong>80%</strong>
+                  <span>actively using Agentforce</span>
+                </div>
+                <div class="stat-card">
+                  <strong>80%</strong>
+                  <span>reported workflow fit as somewhat or very well</span>
+                </div>
+                <div class="stat-card">
+                  <strong>100%</strong>
+                  <span>reported value about as expected or better among evaluators</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="tab-panel" id="tab-agentforce" role="tabpanel" aria-labelledby="tab-button-agentforce">
+            <span class="section-tag">Customer Sentiment & Survey Appendix</span>
+            <h2>Agentforce adoption and customer response analysis</h2>
+            <p class="section-deck">
+              Survey results, qualitative patterns, response summaries, and appendix-level detail are consolidated here
+              to provide a focused view of adoption, workflow fit, implementation friction, and perceived value.
+            </p>
+            <div class="divider"></div>
+
+            <div class="agentforce-summary">
+              <div class="stat-card">
+                <strong>5</strong>
+                <span>anonymous survey respondents</span>
+              </div>
+              <div class="stat-card">
+                <strong>80%</strong>
+                <span>actively using Agentforce</span>
+              </div>
+              <div class="stat-card">
+                <strong>4 of 4</strong>
+                <span>active users rated fit as good or better</span>
+              </div>
+              <div class="stat-card">
+                <strong>40%</strong>
+                <span>reported value much better than expected</span>
+              </div>
+            </div>
+
+            <div class="grid-2" style="margin-bottom: 1.1rem;">
+              <div class="card">
+                <h3>Strategic relevance</h3>
+                <p>
+                  The G2 scrape shows category-level customer sentiment across 1,500 reviews. The survey analysis complements that
+                  with qualitative depth: implementation experience, workflow fit, adoption barriers, and where customers believe
+                  Agentforce needs additional support, training, and community infrastructure.
+                </p>
+              </div>
+              <div class="card">
+                <h3>Consistent takeaway</h3>
+                <p>
+                  Both evidence streams point in the same direction. Customers see real value in the product, but broad adoption depends
+                  on a smoother enablement path, clearer onboarding, and a rollout strategy that matches organizational readiness.
+                </p>
+              </div>
+            </div>
+
+            <div class="iframe-shell">
+              <iframe src="agentforce_analysis.html" title="Agentforce customer survey analysis dashboard"></iframe>
+            </div>
+          </section>
+
+          <section class="tab-panel" id="tab-playbook" role="tabpanel" aria-labelledby="tab-button-playbook">
+            <span class="section-tag">Recommendations</span>
+            <h2>Make adoption modular, make pricing legible, and let Data Cloud do more of the work</h2>
+            <p class="section-deck">
+              The right answer is not to retreat from AI. It is to change the adoption posture. Salesforce should ship
+              Agentforce more like Lightning: modular, reversible, opt-in, and clearly tied to customer value.
+            </p>
+            <div class="divider"></div>
+
+            <div class="grid-2">
+              <div class="recommend-card">
+                <small>Primary Move</small>
+                <h3>Ship Agentforce the way Salesforce shipped Lightning</h3>
+                <p>
+                  Preserve backward compatibility, let customers activate AI by workflow or business unit, and shift toward
+                  usage-based or action-based pricing instead of broad, hard-to-size add-ons.
+                </p>
+                <table class="comparison-table" style="margin-top: 1rem;">
+                  <thead>
+                    <tr>
+                      <th>Today</th>
+                      <th>Recommended</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Default-on or broadly bundled feel</td>
+                      <td>Opt-in modules with customer-controlled activation</td>
+                    </tr>
+                    <tr>
+                      <td>Subscription logic that can feel abstract</td>
+                      <td>Metered pricing tied to agent actions and visible value</td>
+                    </tr>
+                    <tr>
+                      <td>Perception of forced migration risk</td>
+                      <td>Lightning-style compatibility and staged rollout</td>
+                    </tr>
+                    <tr>
+                      <td>AI carries too much of the growth narrative alone</td>
+                      <td>Data Cloud becomes the monetization engine under the AI layer</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="recommend-card">
+                <small>Growth Engine</small>
+                <h3>Monetize Data Cloud more aggressively in the mid-market</h3>
+                <p>
+                  The mid-market is where per-seat pricing is most vulnerable and where usage-based logic can open the door
+                  to expansion. If every meaningful AI interaction also becomes a Data Cloud event, the company turns adoption
+                  into a scalable flywheel.
+                </p>
+                <div class="chart-container" style="margin-top: 1rem; height: 220px;">
+                  <canvas id="dataCloudChart"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <div class="risk-grid" style="margin-top: 1.25rem;">
+              <div class="risk-card">
+                <small>Risk Control</small>
+                <h3>Microsoft bundling compresses deals</h3>
+                <p>Counter with Data Cloud depth and integrated discounts across Tableau and MuleSoft where strategic accounts are under pressure.</p>
+              </div>
+              <div class="risk-card">
+                <small>Risk Control</small>
+                <h3>Agentforce adoption stays slower than expected</h3>
+                <p>Let Data Cloud and analytics carry more of the growth narrative while AI expands only where ROI and customer readiness are visible.</p>
+              </div>
+            </div>
+
+            <div class="card" style="margin-top: 1.25rem;">
+              <h3>12-18 month scorecard</h3>
+              <table class="risk-table" style="margin-top: 0.75rem;">
+                <thead>
+                  <tr>
+                    <th>Outcome</th>
+                    <th>Success signal</th>
+                    <th>Priority</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Modular AI shipped</td>
+                    <td>Customers can adopt Agentforce on their own timeline without platform disruption.</td>
+                    <td><span class="tag high">High</span></td>
+                  </tr>
+                  <tr>
+                    <td>Data Cloud scales</td>
+                    <td>The business moves toward a credible $4-5B ARR path by FY2028.</td>
+                    <td><span class="tag high">High</span></td>
+                  </tr>
+                  <tr>
+                    <td>Margin discipline holds</td>
+                    <td>Operating margins remain strong even as AI investment continues.</td>
+                    <td><span class="tag medium">Medium</span></td>
+                  </tr>
+                  <tr>
+                    <td>Customer satisfaction rises</td>
+                    <td>Agentforce closes the gap with automation sentiment and overall platform approval.</td>
+                    <td><span class="tag medium">Medium</span></td>
+                  </tr>
+                  <tr>
+                    <td>Microsoft pressure softens</td>
+                    <td>Data Cloud presence helps defend enterprise deals against M365 bundling.</td>
+                    <td><span class="tag medium">Medium</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="closing">
+              <h3>Closing view</h3>
+              <p>
+                Salesforce does not need to prove that AI matters. It needs to prove that its version of AI can be adopted
+                with less friction, clearer economics, and more confidence than the alternatives.
+              </p>
+            </div>
+          </section>
+
+          <section class="tab-panel" id="tab-bibliography" role="tabpanel" aria-labelledby="tab-button-bibliography">
+            <span class="section-tag">Bibliography</span>
+            <h2>Full formatted bibliography and research transparency</h2>
+            <p class="section-deck">
+              The formal bibliography, direct research links, and research-support tooling notes used to support the
+              final strategic analysis are consolidated below.
+            </p>
+            <div class="divider"></div>
+
+            <div class="bibliography-intro">
+              <p>
+                Research-support tools referenced in the presentation materials include Apify for data scraping,
+                Qualtrics for survey collection, and Claude, ChatGPT, Cowork, and Fiscal.ai for research support and
+                workflow assistance. Final source selection, analytical framing, and strategic claims were reviewed
+                and synthesized into the team deliverable.
+              </p>
+            </div>
+
+            <ol class="bibliography-list">
+              <li>Ainvest. “Is Salesforce (CRM) Poised for a Comeback in 2026? A Deep Dive into Undervaluation and Fundamentals.” <em>Ainvest</em>, 2025, <a href="https://www.ainvest.com/news/salesforce-crm-poised-comeback-2026-deep-dive-undervaluation-fundamentals-2512/" target="_blank" rel="noreferrer">https://www.ainvest.com/news/salesforce-crm-poised-comeback-2026-deep-dive-undervaluation-fundamentals-2512/</a>.</li>
+              <li>Bloomberg. “Salesforce (CRM) Job Cuts at Stake Due to Activist Investors Elliott, Starboard.” <em>Bloomberg</em>, 24 Jan. 2023, <a href="https://www.bloomberg.com/news/articles/2023-01-24/salesforce-job-cuts-big-deals-at-stake-as-elliott-pushes-for-profit" target="_blank" rel="noreferrer">https://www.bloomberg.com/news/articles/2023-01-24/salesforce-job-cuts-big-deals-at-stake-as-elliott-pushes-for-profit</a>.</li>
+              <li>Bounteous. “Say Hello to Agentforce: Elevating Einstein to the Next Level of AI.” <em>Bounteous</em>, 28 Oct. 2024, <a href="https://www.bounteous.com/insights/2024/10/28/say-hello-agentforce-elevating-einstein-next-level-ai/" target="_blank" rel="noreferrer">https://www.bounteous.com/insights/2024/10/28/say-hello-agentforce-elevating-einstein-next-level-ai/</a>.</li>
+              <li>Brim Labs. “CRM Evolution: How Salesforce Is Transforming Business in 2025.” <em>Brim Labs</em>, 2025, <a href="https://brimlabs.ai/blog/crm-evolution-how-salesforce-is-transforming-business-in-2025/" target="_blank" rel="noreferrer">https://brimlabs.ai/blog/crm-evolution-how-salesforce-is-transforming-business-in-2025/</a>.</li>
+              <li>CB Insights. “With Elliott Management, Starboard Value, and Third Point Invested in Salesforce, What Assets Might It Sell Off?” <em>CB Insights</em>, 2023, <a href="https://www.cbinsights.com/research/salesforce-activist-investors-divestiture/" target="_blank" rel="noreferrer">https://www.cbinsights.com/research/salesforce-activist-investors-divestiture/</a>.</li>
+              <li>Cirra AI. “Salesforce AI Explained: The 2025 Einstein GPT Landscape.” <em>Cirra AI</em>, 2025, <a href="https://cirra.ai/articles/salesforce-ai-landscape-2025" target="_blank" rel="noreferrer">https://cirra.ai/articles/salesforce-ai-landscape-2025</a>.</li>
+              <li>Comparably. “Salesforce Mission Statement.” <em>Comparably</em>, <a href="https://www.comparably.com/companies/salesforce/mission" target="_blank" rel="noreferrer">https://www.comparably.com/companies/salesforce/mission</a>. Accessed 17 Apr. 2026.</li>
+              <li>CRM Search. “CRM Software Market Share.” <em>CRM Search</em>, <a href="https://crmsearch.com/crm/crm-software-market-share/" target="_blank" rel="noreferrer">https://crmsearch.com/crm/crm-software-market-share/</a>. Accessed 17 Apr. 2026.</li>
+              <li>CXToday. “Salesforce Still Dominates the CRM Space, Leads on Revenue for the 12th Straight Year.” <em>CXToday</em>, <a href="https://www.cxtoday.com/crm/salesforce-still-dominates-the-crm-space-leads-on-revenue-for-the-12th-straight-year/" target="_blank" rel="noreferrer">https://www.cxtoday.com/crm/salesforce-still-dominates-the-crm-space-leads-on-revenue-for-the-12th-straight-year/</a>. Accessed 17 Apr. 2026.</li>
+              <li>Cyntexa. “Top 25 Biggest Salesforce Acquisitions: History, Impact and Spend.” <em>Cyntexa</em>, 2026, <a href="https://cyntexa.com/blog/top-salesforce-acquisitions/" target="_blank" rel="noreferrer">https://cyntexa.com/blog/top-salesforce-acquisitions/</a>.</li>
+              <li>DCF Modeling. “Mission Statement, Vision & Core Values of Salesforce, Inc.” <em>DCF Modeling</em>, 2025, <a href="https://www.dcfmodeling.com/blogs/vision/crm-mission-vision" target="_blank" rel="noreferrer">https://www.dcfmodeling.com/blogs/vision/crm-mission-vision</a>.</li>
+              <li>---. “Porter’s Five Forces of Salesforce, Inc. (CRM).” <em>DCF Modeling</em>, 2024, <a href="https://dcfmodeling.com/products/crm-porters-five-forces-analysis" target="_blank" rel="noreferrer">https://dcfmodeling.com/products/crm-porters-five-forces-analysis</a>.</li>
+              <li>---. “Salesforce, Inc. (CRM): VRIO Analysis.” <em>DCF Modeling</em>, 2025, <a href="https://www.dcfmodeling.com/products/crm-vrio-analysis" target="_blank" rel="noreferrer">https://www.dcfmodeling.com/products/crm-vrio-analysis</a>.</li>
+              <li>“The Best Enterprise CRM Suite: The 2024 CRM Industry Leader Awards.” <em>Destination CRM</em>, <a href="https://www.destinationcrm.com/Articles/Editorial/Magazine-Features/The-Best%C2%A0Enterprise-CRM-Suite-The-2024-CRM-Industry-Leader-Awards-165656.aspx" target="_blank" rel="noreferrer">https://www.destinationcrm.com/Articles/Editorial/Magazine-Features/The-Best%C2%A0Enterprise-CRM-Suite-The-2024-CRM-Industry-Leader-Awards-165656.aspx</a>. Accessed 17 Apr. 2026.</li>
+              <li>Financial Content / MarketMinute. “Salesforce’s AI-Powered Resurgence: A Deep Dive into Strategic Growth and Market Potential.” <em>MarketMinute</em>, 13 Oct. 2025, <a href="https://markets.financialcontent.com/wral/article/marketminute-2025-10-13-salesforces-ai-powered-resurgence-a-deep-dive-into-strategic-growth-and-market-potential" target="_blank" rel="noreferrer">https://markets.financialcontent.com/wral/article/marketminute-2025-10-13-salesforces-ai-powered-resurgence-a-deep-dive-into-strategic-growth-and-market-potential</a>.</li>
+              <li>Gartner. “Gartner Forecasts Worldwide Public Cloud End-User Spending to Total $723 Billion in 2025.” <em>Gartner</em>, 19 Nov. 2024, <a href="https://www.gartner.com/en/newsroom/press-releases/2024-11-19-gartner-forecasts-worldwide-public-cloud-end-user-spending-to-total-723-billion-dollars-in-2025" target="_blank" rel="noreferrer">https://www.gartner.com/en/newsroom/press-releases/2024-11-19-gartner-forecasts-worldwide-public-cloud-end-user-spending-to-total-723-billion-dollars-in-2025</a>.</li>
+              <li>GeeksForGeeks. “The Future of Salesforce in 2025.” <em>GeeksForGeeks</em>, 2025, <a href="https://www.geeksforgeeks.org/blogs/future-of-salesforce/" target="_blank" rel="noreferrer">https://www.geeksforgeeks.org/blogs/future-of-salesforce/</a>.</li>
+              <li>GeekWire. “Salesforce Stops Reporting Individual Revenue Figures for Slack and Tableau.” <em>GeekWire</em>, 2023, <a href="https://www.geekwire.com/2023/salesforce-stops-reporting-individual-revenue-figures-for-slack-and-tableau/" target="_blank" rel="noreferrer">https://www.geekwire.com/2023/salesforce-stops-reporting-individual-revenue-figures-for-slack-and-tableau/</a>.</li>
+              <li>G2. <em>Agentforce Sales (formerly Salesforce Sales Cloud) Reviews 2026: Details, Pricing, &amp; Features</em>. <em>G2</em>, <a href="https://www.g2.com/products/agentforce-sales-formerly-salesforce-sales-cloud/reviews" target="_blank" rel="noreferrer">https://www.g2.com/products/agentforce-sales-formerly-salesforce-sales-cloud/reviews</a>. Accessed 17 Apr. 2026.</li>
+              <li>---. <em>Agentforce Service (formerly Salesforce Service Cloud) Reviews 2026: Details, Pricing, &amp; Features</em>. <em>G2</em>, <a href="https://www.g2.com/products/agentforce-service-formerly-salesforce-service-cloud/reviews" target="_blank" rel="noreferrer">https://www.g2.com/products/agentforce-service-formerly-salesforce-service-cloud/reviews</a>. Accessed 17 Apr. 2026.</li>
+              <li>---. <em>Salesforce Agentforce Reviews 2026: Details, Pricing, &amp; Features</em>. <em>G2</em>, <a href="https://www.g2.com/products/salesforce-agentforce/reviews" target="_blank" rel="noreferrer">https://www.g2.com/products/salesforce-agentforce/reviews</a>. Accessed 17 Apr. 2026.</li>
+              <li>Goldendoor Asset Management. “Salesforce (CRM) 2025 Q4 Earnings Review &amp; 2026 Forward Outlook.” <em>Goldendoor Asset Management</em>, 2025, <a href="https://www.goldendoorasset.com/research/salesforce-crm-2025-q4-earnings-review-2026-forward-outlook" target="_blank" rel="noreferrer">https://www.goldendoorasset.com/research/salesforce-crm-2025-q4-earnings-review-2026-forward-outlook</a>.</li>
+              <li>HubSpot. “Q4 and Full Year 2024 Results.” <em>HubSpot Investor Relations</em>, <a href="https://ir.hubspot.com/node/14176/pdf" target="_blank" rel="noreferrer">https://ir.hubspot.com/node/14176/pdf</a>. Accessed 17 Apr. 2026.</li>
+              <li>IBM Institute for Business Value. <em>State of Salesforce 2025</em>. <em>IBM</em>, 2025, <a href="https://www.ibm.com/thought-leadership/institute-business-value/en-us/report/state-of-salesforce-2025" target="_blank" rel="noreferrer">https://www.ibm.com/thought-leadership/institute-business-value/en-us/report/state-of-salesforce-2025</a>.</li>
+              <li>Klover.ai. “Salesforce AI Strategy: Analysis of Sustained Dominance in Enterprise AI.” <em>Klover.ai</em>, 2025, <a href="https://www.klover.ai/salesforce-ai-strategy-analysis-sustained-dominance-in-enterprise-ai/" target="_blank" rel="noreferrer">https://www.klover.ai/salesforce-ai-strategy-analysis-sustained-dominance-in-enterprise-ai/</a>.</li>
+              <li>McGowen-Hare, Leah. “All About the Trailblazer Community.” <em>Salesforce</em>, 9 Apr. 2024, <a href="https://www.salesforce.com/blog/what-is-the-trailblazer-community/" target="_blank" rel="noreferrer">https://www.salesforce.com/blog/what-is-the-trailblazer-community/</a>. Accessed 17 Apr. 2026.</li>
+              <li>PortersFiveForce.com. “Competitive Landscape of Salesforce Company.” <em>PortersFiveForce.com</em>, 2026, <a href="https://portersfiveforce.com/blogs/competitors/salesforce" target="_blank" rel="noreferrer">https://portersfiveforce.com/blogs/competitors/salesforce</a>.</li>
+              <li>Sailwayz. “Top 10 Biggest Salesforce Acquisitions.” <em>Sailwayz</em>, 2025, <a href="https://sailwayz.com/biggest-salesforce-acquisitions/" target="_blank" rel="noreferrer">https://sailwayz.com/biggest-salesforce-acquisitions/</a>.</li>
+              <li>Salesforce. “Debunking Myths: Salesforce Einstein and Agentforce.” <em>Salesforce</em>, <a href="https://www.salesforce.com/blog/debunking-myths-salesforce-einstein-and-agentforce/" target="_blank" rel="noreferrer">https://www.salesforce.com/blog/debunking-myths-salesforce-einstein-and-agentforce/</a>. Accessed 17 Apr. 2026.</li>
+              <li>---. “EU AI Act: Key Details and How to Prepare.” <em>Salesforce EMEA</em>, 2024, <a href="https://www.salesforce.com/eu/artificial-intelligence/eu-ai-act/" target="_blank" rel="noreferrer">https://www.salesforce.com/eu/artificial-intelligence/eu-ai-act/</a>.</li>
+              <li>---. “Generative AI Statistics.” <em>Salesforce News</em>, <a href="https://www.salesforce.com/news/stories/generative-ai-statistics/" target="_blank" rel="noreferrer">https://www.salesforce.com/news/stories/generative-ai-statistics/</a>. Accessed 17 Apr. 2026.</li>
+              <li>---. “How to Create Alignment Within Your Company.” <em>Salesforce</em>, <a href="https://www.salesforce.com/blog/how-to-create-alignment-within-your-company/" target="_blank" rel="noreferrer">https://www.salesforce.com/blog/how-to-create-alignment-within-your-company/</a>. Accessed 17 Apr. 2026.</li>
+              <li>---. “IDC MarketScape Application Platform Marketplaces 2025–2026.” <em>Salesforce News</em>, <a href="https://www.salesforce.com/news/stories/idc-marketscape-application-platform-marketplaces-2025-2026/" target="_blank" rel="noreferrer">https://www.salesforce.com/news/stories/idc-marketscape-application-platform-marketplaces-2025-2026/</a>. Accessed 17 Apr. 2026.</li>
+              <li>---. “Marc Benioff Bio.” <em>Salesforce</em>, <a href="https://www.salesforce.com/company/marc-benioff-bio/" target="_blank" rel="noreferrer">https://www.salesforce.com/company/marc-benioff-bio/</a>. Accessed 17 Apr. 2026.</li>
+              <li>---. “Salesforce and Hawaii.” <em>Salesforce</em>, <a href="https://www.salesforce.com/blog/salesforce-and-hawaii/" target="_blank" rel="noreferrer">https://www.salesforce.com/blog/salesforce-and-hawaii/</a>. Accessed 17 Apr. 2026.</li>
+              <li>---. “The History of Salesforce.” <em>Salesforce News</em>, <a href="https://www.salesforce.com/news/stories/the-history-of-salesforce/" target="_blank" rel="noreferrer">https://www.salesforce.com/news/stories/the-history-of-salesforce/</a>. Accessed 17 Apr. 2026.</li>
+              <li>---. <em>Trailblazer Community for Nonprofits and Educators</em>. <em>Salesforce</em>, <a href="https://www.salesforce.com/nonprofit/trailblazer-community/" target="_blank" rel="noreferrer">https://www.salesforce.com/nonprofit/trailblazer-community/</a>. Accessed 17 Apr. 2026.</li>
+              <li>Salesforce, Inc. <em>FY2024 Annual Report Supplement (Form ARS)</em>. <em>U.S. Securities and Exchange Commission</em>, <a href="https://www.sec.gov/Archives/edgar/data/0001108524/000119312524140606/d753990dars.pdf" target="_blank" rel="noreferrer">https://www.sec.gov/Archives/edgar/data/0001108524/000119312524140606/d753990dars.pdf</a>. Accessed 17 Apr. 2026.</li>
+              <li>---. <em>FY2025 Annual Report (Form 10-K)</em>. <em>U.S. Securities and Exchange Commission</em>, <a href="https://www.sec.gov/ix?doc=/Archives/edgar/data/0001108524/000110852426000060/crm-20260131.htm" target="_blank" rel="noreferrer">https://www.sec.gov/ix?doc=/Archives/edgar/data/0001108524/000110852426000060/crm-20260131.htm</a>. Accessed 17 Apr. 2026.</li>
+              <li>---. <em>FY2025 Proxy Supplement (Form DEFA14A)</em>. <em>U.S. Securities and Exchange Commission</em>, <a href="https://www.sec.gov/Archives/edgar/data/0001108524/000110852425000025/salesforce2025proxysupplem.htm" target="_blank" rel="noreferrer">https://www.sec.gov/Archives/edgar/data/0001108524/000110852425000025/salesforce2025proxysupplem.htm</a>. Accessed 17 Apr. 2026.</li>
+              <li>---. “Q1 FY2026 Earnings Release (Form 8-K).” <em>U.S. Securities and Exchange Commission</em>, <a href="https://www.sec.gov/Archives/edgar/data/0001108524/000110852425000027/crm-q1fy26xexhibit991.htm" target="_blank" rel="noreferrer">https://www.sec.gov/Archives/edgar/data/0001108524/000110852425000027/crm-q1fy26xexhibit991.htm</a>. Accessed 17 Apr. 2026.</li>
+              <li>---. “Q2 FY2026 Earnings Release (Form 8-K).” <em>U.S. Securities and Exchange Commission</em>, <a href="https://www.sec.gov/Archives/edgar/data/0001108524/000110852425000083/crm-q2fy26xexhibit991.htm" target="_blank" rel="noreferrer">https://www.sec.gov/Archives/edgar/data/0001108524/000110852425000083/crm-q2fy26xexhibit991.htm</a>. Accessed 17 Apr. 2026.</li>
+              <li>SellersCommerce. “Top CRM Statistics You Need to Know in 2025.” <em>SellersCommerce</em>, 2024, <a href="https://www.sellerscommerce.com/blog/crm-statistics/" target="_blank" rel="noreferrer">https://www.sellerscommerce.com/blog/crm-statistics/</a>.</li>
+              <li>SecurePrivacy. “Data Privacy Trends 2026: Essential Guide for Business Leaders.” <em>SecurePrivacy</em>, 2025, <a href="https://secureprivacy.ai/blog/data-privacy-trends-2026" target="_blank" rel="noreferrer">https://secureprivacy.ai/blog/data-privacy-trends-2026</a>.</li>
+              <li>SF Standard. “Salesforce Considers More Layoffs amid Activist Pressure: Report.” <em>The San Francisco Standard</em>, 27 Mar. 2023, <a href="https://sfstandard.com/2023/03/27/salesforce-considers-more-layoffs-amid-activist-pressure-report/" target="_blank" rel="noreferrer">https://sfstandard.com/2023/03/27/salesforce-considers-more-layoffs-amid-activist-pressure-report/</a>.</li>
+              <li>SLT Creative. “CRM Statistics.” <em>SLT Creative</em>, <a href="https://www.sltcreative.com/crm-statistics" target="_blank" rel="noreferrer">https://www.sltcreative.com/crm-statistics</a>. Accessed 17 Apr. 2026.</li>
+              <li>TechCrunch. “No Rest for Salesforce as Activist Investor Elliott Management Takes Multibillion-Dollar Stake in Company.” <em>TechCrunch</em>, 23 Jan. 2023, <a href="https://techcrunch.com/2023/01/23/no-rest-for-salesforce-as-activist-investor-elliott-management-takes-multibillion-stake-in-company/" target="_blank" rel="noreferrer">https://techcrunch.com/2023/01/23/no-rest-for-salesforce-as-activist-investor-elliott-management-takes-multibillion-stake-in-company/</a>.</li>
+              <li>---. “Salesforce Escaped from the Jaws of Activists to Find Stability in 2023.” <em>TechCrunch</em>, 24 Dec. 2023, <a href="https://techcrunch.com/2023/12/24/salesforce-lookback-2023/" target="_blank" rel="noreferrer">https://techcrunch.com/2023/12/24/salesforce-lookback-2023/</a>.</li>
+              <li>TechTarget. “Salesforce Upheaval Likely as Elliott Management Moves In.” <em>TechTarget</em>, 2023, <a href="https://www.techtarget.com/searchcustomerexperience/news/365530164/Salesforce-upheaval-likely-as-Elliott-Management-moves-in" target="_blank" rel="noreferrer">https://www.techtarget.com/searchcustomerexperience/news/365530164/Salesforce-upheaval-likely-as-Elliott-Management-moves-in</a>.</li>
+              <li>Wave Connect. “CRM Statistics.” <em>Wave Connect</em>, <a href="https://wavecnct.com/blogs/crm-statistics" target="_blank" rel="noreferrer">https://wavecnct.com/blogs/crm-statistics</a>. Accessed 17 Apr. 2026.</li>
+              <li>Wikipedia contributors. “Marc Benioff.” <em>Wikipedia</em>, Wikimedia Foundation, <a href="https://en.wikipedia.org/wiki/Marc_Benioff" target="_blank" rel="noreferrer">https://en.wikipedia.org/wiki/Marc_Benioff</a>. Accessed 17 Apr. 2026.</li>
+              <li>Yahoo Finance / Barchart. “Starboard Value Is Betting Big on Salesforce Stock.” <em>Yahoo Finance</em>, 20 Aug. 2025, <a href="https://finance.yahoo.com/news/starboard-value-betting-big-salesforce-135254036.html" target="_blank" rel="noreferrer">https://finance.yahoo.com/news/starboard-value-betting-big-salesforce-135254036.html</a>.</li>
+              <li>“Salesforce CEO Marc Benioff on What the Market Is Getting Wrong about AI.” <em>YouTube</em>, <a href="https://www.youtube.com/watch?v=Bewu2Jq_m1o" target="_blank" rel="noreferrer">https://www.youtube.com/watch?v=Bewu2Jq_m1o</a>. Accessed 18 Apr. 2026.</li>
+              <li>“The Story of Salesforce. How Marc Benioff Built the Best CRM.” <em>YouTube</em>, <a href="https://www.youtube.com/watch?v=gEj9u0M8cLg" target="_blank" rel="noreferrer">https://www.youtube.com/watch?v=gEj9u0M8cLg</a>. Accessed 18 Apr. 2026.</li>
+              <li>“Dying Software Giant or Attractive Opportunity? Salesforce Stock Explained.” <em>YouTube</em>, <a href="https://www.youtube.com/watch?v=eQ-v_8mcVDY" target="_blank" rel="noreferrer">https://www.youtube.com/watch?v=eQ-v_8mcVDY</a>. Accessed 18 Apr. 2026.</li>
+            </ol>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      Salesforce Strategic Analysis website. Narrative structure, charts, and embedded visuals have been synthesized
+      into a single presentation page. Reference links above are organized as an executive-ready source appendix.
+    </footer>
+
+    <script>
+      const tabButtons = Array.from(document.querySelectorAll(".tab-button"));
+      const tabPanels = Array.from(document.querySelectorAll(".tab-panel"));
+
+      function activateTab(name, focus = false) {
+        tabButtons.forEach((button) => {
+          const selected = button.dataset.tab === name;
+          button.setAttribute("aria-selected", String(selected));
+          button.tabIndex = selected ? 0 : -1;
+          if (selected && focus) button.focus();
+        });
+
+        tabPanels.forEach((panel) => {
+          panel.classList.toggle("active", panel.id === `tab-${name}`);
+        });
+      }
+
+      tabButtons.forEach((button, index) => {
+        button.addEventListener("click", () => activateTab(button.dataset.tab));
+        button.addEventListener("keydown", (event) => {
+          let next = index;
+          if (event.key === "ArrowRight" || event.key === "ArrowDown") next = (index + 1) % tabButtons.length;
+          else if (event.key === "ArrowLeft" || event.key === "ArrowUp") next = (index - 1 + tabButtons.length) % tabButtons.length;
+          else if (event.key === "Home") next = 0;
+          else if (event.key === "End") next = tabButtons.length - 1;
+          else return;
+
+          event.preventDefault();
+          activateTab(tabButtons[next].dataset.tab, true);
+        });
+      });
+
+      Chart.defaults.font.family = "\"Avenir Next\", \"Segoe UI\", sans-serif";
+      Chart.defaults.color = "#5A6880";
+      Chart.defaults.borderColor = "rgba(90, 104, 128, 0.14)";
+
+      new Chart(document.getElementById("marketShareChart"), {
+        type: "doughnut",
+        data: {
+          labels: ["Salesforce", "Microsoft", "HubSpot", "Oracle", "SAP", "Others"],
+          datasets: [{
+            data: [20.7, 5, 5, 4, 3, 62.3],
+            backgroundColor: ["#0176D3", "#4C8DFF", "#FF9F50", "#9F7AEA", "#2BB0A6", "#DCE7F3"],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: "bottom" }
+          },
+          cutout: "62%"
+        }
+      });
+
+      const dashboardConfig = {
+        overview: {
+          title: "Revenue Growth and Margin Transition",
+          subtitle: "Scale remains impressive, but valuation logic now centers on profitability and execution discipline.",
+          insightTitle: "Executive readout",
+          insightCopy: "Salesforce's financial profile reflects a company moving from expansion-at-all-costs into a more selective, margin-conscious growth model.",
+          insightBullets: [
+            "Revenue continues to expand, but the slope is flattening.",
+            "Margin improvement has become central to investor confidence.",
+            "Data Cloud provides one of the clearest paths to re-accelerated growth."
+          ],
+          kpis: [
+            ["$41.5B", "FY2026 revenue"],
+            ["~9%", "Guided growth rate"],
+            ["20.1%", "Operating margin"],
+            ["$1.2B", "Data Cloud + AI ARR"]
+          ],
+          chart: {
+            type: "bar",
+            data: {
+              labels: ["FY17", "FY18", "FY19", "FY20", "FY21", "FY22", "FY23", "FY24", "FY25", "FY26E"],
+              datasets: [
+                {
+                  type: "bar",
+                  label: "Revenue ($B)",
+                  data: [8.4, 10.5, 13.3, 17.1, 21.3, 26.5, 31.4, 34.9, 37.9, 41.5],
+                  backgroundColor: ["#0176D3", "#0176D3", "#0176D3", "#0176D3", "#0176D3", "#0176D3", "#0176D3", "#0176D3", "#0176D3", "rgba(0,161,224,0.45)"],
+                  borderRadius: 6,
+                  yAxisID: "y"
+                },
+                {
+                  type: "line",
+                  label: "Operating Margin (%)",
+                  data: [2.6, 4.3, 4.0, 1.7, 2.1, 2.1, 3.3, 14.4, 19.0, 20.1],
+                  borderColor: "#FF8C00",
+                  backgroundColor: "#FF8C00",
+                  tension: 0.28,
+                  yAxisID: "y1"
+                }
+              ]
+            },
+            options: {
+              interaction: { mode: "index", intersect: false },
+              scales: {
+                y: { beginAtZero: true, title: { display: true, text: "Revenue ($B)" } },
+                y1: { beginAtZero: true, position: "right", grid: { drawOnChartArea: false }, title: { display: true, text: "Margin %" } }
+              }
+            }
+          }
+        },
+        margins: {
+          title: "Margin Expansion After the 2023 Reset",
+          subtitle: "The business was repriced around discipline, and margin gains became a major proof point for management.",
+          insightTitle: "What changed",
+          insightCopy: "The post-2023 period shows a materially different operating story: stronger profitability, more measured investment, and less tolerance for initiatives that do not prove value quickly.",
+          insightBullets: [
+            "Operating margin inflects sharply after the activist period.",
+            "Free cash flow margin strengthens alongside cost discipline.",
+            "This creates a narrower runway for forced, high-friction AI rollouts."
+          ],
+          kpis: [
+            ["3.3%→20.1%", "Operating margin expansion"],
+            ["20.1%→34.7%", "Free cash flow margin trend"],
+            ["2023", "Inflection year for cost reset"],
+            ["$25B", "Authorized buyback context"]
+          ],
+          chart: {
+            type: "line",
+            data: {
+              labels: ["FY17", "FY18", "FY19", "FY20", "FY21", "FY22", "FY23", "FY24", "FY25", "FY26E"],
+              datasets: [
+                {
+                  label: "Free Cash Flow Margin (%)",
+                  data: [20.1, 20.9, 21.1, 21.6, 19.3, 19.9, 20.1, 27.2, 32.8, 34.7],
+                  borderColor: "#0176D3",
+                  backgroundColor: "rgba(1,118,211,0.12)",
+                  fill: false,
+                  tension: 0.25
+                },
+                {
+                  label: "Operating Margin (%)",
+                  data: [2.6, 4.3, 4.0, 1.7, 2.1, 2.1, 3.3, 14.4, 19.0, 20.1],
+                  borderColor: "#FF8C00",
+                  backgroundColor: "rgba(255,140,0,0.12)",
+                  fill: false,
+                  tension: 0.25
+                }
+              ]
+            },
+            options: {
+              scales: {
+                y: { beginAtZero: true, title: { display: true, text: "Margin %" } }
+              }
+            }
+          }
+        },
+        segments: {
+          title: "Segment Mix Highlights the Next Growth Engine",
+          subtitle: "Platform, integration, analytics, and data-adjacent offerings increasingly carry strategic importance beyond legacy CRM clouds.",
+          insightTitle: "Why segment mix matters",
+          insightCopy: "The segment story reinforces the thesis that Salesforce's next leg of growth is more likely to come from platform depth and data infrastructure than from forcing AI adoption into every account at once.",
+          insightBullets: [
+            "Platform & Other shows the strongest growth profile in the set.",
+            "Integration & Analytics remains strategically important because it feeds Data Cloud and AI workflows.",
+            "Professional Services is not the engine; scalable platform revenue is."
+          ],
+          kpis: [
+            ["+34.4%", "Platform & Other growth"],
+            ["+20.1%", "Integration & Analytics growth"],
+            ["+19.1%", "Service growth"],
+            ["-7.9%", "Professional Services change"]
+          ],
+          chart: {
+            type: "bar",
+            data: {
+              labels: ["Platform & Other", "Integration & Analytics", "Service", "Sales", "Marketing & Commerce", "Professional Services"],
+              datasets: [{
+                label: "Growth FY23 → FY25 (%)",
+                data: [34.4, 20.1, 19.1, 19.1, 10.5, -7.9],
+                backgroundColor: ["#0176D3", "#1B96FF", "#3BA0FF", "#5CB0FF", "#8EC9FF", "#FFB55C"],
+                borderRadius: 6
+              }]
+            },
+            options: {
+              indexAxis: "y",
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { title: { display: true, text: "Growth (%)" } }
+              }
+            }
+          }
+        }
+      };
+
+      const dashboardTitle = document.getElementById("financial-dashboard-title");
+      const dashboardSubtitle = document.getElementById("financial-dashboard-subtitle");
+      const dashboardInsightTitle = document.getElementById("financial-dashboard-insight-title");
+      const dashboardInsightCopy = document.getElementById("financial-dashboard-insight-copy");
+      const dashboardInsightList = document.getElementById("financial-dashboard-insight-list");
+      const dashboardKpis = [
+        [document.getElementById("dashboard-kpi-1"), document.getElementById("dashboard-kpi-1-label")],
+        [document.getElementById("dashboard-kpi-2"), document.getElementById("dashboard-kpi-2-label")],
+        [document.getElementById("dashboard-kpi-3"), document.getElementById("dashboard-kpi-3-label")],
+        [document.getElementById("dashboard-kpi-4"), document.getElementById("dashboard-kpi-4-label")]
+      ];
+
+      const financialDashboardChart = new Chart(document.getElementById("financialDashboardChart"), {
+        type: dashboardConfig.overview.chart.type,
+        data: dashboardConfig.overview.chart.data,
+        options: {
+          maintainAspectRatio: false,
+          responsive: true,
+          ...dashboardConfig.overview.chart.options
+        }
+      });
+
+      function updateDashboard(view) {
+        const config = dashboardConfig[view];
+        if (!config) return;
+
+        document.querySelectorAll(".dashboard-btn").forEach((button) => {
+          button.classList.toggle("active", button.dataset.dashboardView === view);
+        });
+
+        dashboardTitle.textContent = config.title;
+        dashboardSubtitle.textContent = config.subtitle;
+        dashboardInsightTitle.textContent = config.insightTitle;
+        dashboardInsightCopy.textContent = config.insightCopy;
+        dashboardInsightList.innerHTML = config.insightBullets.map((item) => `<li>${item}</li>`).join("");
+
+        config.kpis.forEach((kpi, index) => {
+          dashboardKpis[index][0].textContent = kpi[0];
+          dashboardKpis[index][1].textContent = kpi[1];
+        });
+
+        financialDashboardChart.config.type = config.chart.type;
+        financialDashboardChart.data = config.chart.data;
+        financialDashboardChart.options = {
+          maintainAspectRatio: false,
+          responsive: true,
+          plugins: {
+            legend: {
+              display: true,
+              position: "bottom"
+            }
+          },
+          ...config.chart.options
+        };
+        financialDashboardChart.update();
+      }
+
+      document.querySelectorAll(".dashboard-btn").forEach((button) => {
+        button.addEventListener("click", () => updateDashboard(button.dataset.dashboardView));
+      });
+
+      new Chart(document.getElementById("revenueMarginChart"), {
+        data: {
+          labels: ["FY17", "FY18", "FY19", "FY20", "FY21", "FY22", "FY23", "FY24", "FY25", "FY26E"],
+          datasets: [
+            {
+              type: "bar",
+              label: "Revenue ($B)",
+              data: [8.4, 10.5, 13.3, 17.1, 21.3, 26.5, 31.4, 34.9, 37.9, 41.5],
+              backgroundColor: ["#0176D3", "#0176D3", "#0176D3", "#0176D3", "#0176D3", "#0176D3", "#0176D3", "#0176D3", "#0176D3", "rgba(0,161,224,0.45)"],
+              borderRadius: 6,
+              yAxisID: "y"
+            },
+            {
+              type: "line",
+              label: "Operating Margin (%)",
+              data: [2.6, 4.3, 4.0, 1.7, 2.1, 2.1, 3.3, 14.4, 19.0, 20.1],
+              borderColor: "#FF8C00",
+              backgroundColor: "#FF8C00",
+              tension: 0.28,
+              yAxisID: "y1"
+            }
+          ]
+        },
+        options: {
+          maintainAspectRatio: false,
+          interaction: { mode: "index", intersect: false },
+          scales: {
+            y: { beginAtZero: true, title: { display: true, text: "Revenue ($B)" } },
+            y1: { beginAtZero: true, position: "right", grid: { drawOnChartArea: false }, title: { display: true, text: "Margin %" } }
+          }
+        }
+      });
+
+      new Chart(document.getElementById("segmentChart"), {
+        type: "bar",
+        data: {
+          labels: ["Platform & Other", "Integration & Analytics", "Service", "Sales", "Marketing & Commerce", "Professional Services"],
+          datasets: [{
+            label: "Growth FY23 → FY25 (%)",
+            data: [34.4, 20.1, 19.1, 19.1, 10.5, -7.9],
+            backgroundColor: ["#0176D3", "#1B96FF", "#3BA0FF", "#5CB0FF", "#8EC9FF", "#FFB55C"],
+            borderRadius: 6
+          }]
+        },
+        options: {
+          indexAxis: "y",
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } }
+        }
+      });
+
+      new Chart(document.getElementById("dataCloudChart"), {
+        type: "line",
+        data: {
+          labels: ["FY25", "FY26", "FY27", "FY28"],
+          datasets: [{
+            label: "Illustrative Data Cloud + AI ARR ($B)",
+            data: [1.2, 2.1, 3.4, 4.8],
+            borderColor: "#0176D3",
+            backgroundColor: "rgba(1,118,211,0.12)",
+            pointBackgroundColor: "#0176D3",
+            fill: true,
+            tension: 0.28
+          }]
+        },
+        options: {
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, title: { display: true, text: "$B" } }
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
